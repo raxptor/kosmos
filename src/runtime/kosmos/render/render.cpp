@@ -30,23 +30,17 @@ namespace kosmos
 
 		typedef std::map<std::string, loaded_texture*> LoadedTextures;
 
-		struct data
+		namespace
 		{
-			LoadedTextures textures;
+			LoadedTextures s_textures;
 		};
 
-		data* create()
-		{
-			data *d = new data();
-			return d;
-		}
-
-		void unload_texture(data *d, loaded_texture *tex)
+		void unload_texture(loaded_texture *tex)
 		{
 			if (tex->refcount-- == 0)
 			{
 				glDeleteTextures(1, &tex->handle);
-				d->textures.erase(d->textures.find(tex->source));
+				s_textures.erase(s_textures.find(tex->source));
 				delete tex;
 			}
 		}
@@ -117,10 +111,10 @@ namespace kosmos
 		}
 
 
-		loaded_texture * load_texture(data *d, outki::Texture *texture)
+		loaded_texture * load_texture(outki::Texture *texture)
 		{
-			LoadedTextures::iterator i = d->textures.find(texture->id);
-			if (i != d->textures.end())
+			LoadedTextures::iterator i = s_textures.find(texture->id);
+			if (i != s_textures.end())
 			{
 				i->second->refcount++;
 				return i->second;
@@ -139,22 +133,26 @@ namespace kosmos
 			tex->source_tex = texture;
 			glGenTextures(1, &tex->handle);
 
-			d->textures.insert(LoadedTextures::value_type(texture->id, tex));
+			s_textures.insert(LoadedTextures::value_type(texture->id, tex));
 
 			update_texture(tex);
 			return tex;
 		}
-
-		void destroy(data *d)
+		
+		void reset_matrices_ortho(int width, int height)
 		{
-			delete d;
+			glMatrixMode( GL_MODELVIEW );
+			glLoadIdentity();
+			glMatrixMode( GL_PROJECTION );
+			glLoadIdentity();
+			glOrtho(0, (float)width, (float)height, 0, -1, 1);
 		}
 
-		void begin(data *d, bool clearcolor, bool cleardepth, unsigned int clear_color)
+		void begin(int width, int height, bool clearcolor, bool cleardepth, unsigned int clear_color)
 		{
 			//
-			LoadedTextures::iterator i = d->textures.begin();
-			while (i != d->textures.end())
+			LoadedTextures::iterator i = s_textures.begin();
+			while (i != s_textures.end())
 			{
 				if (LIVE_UPDATE(&i->second->container))
 				{
@@ -164,37 +162,22 @@ namespace kosmos
 
 				++i;
 			}
-
-			int x0, y0, x1, y1;
-			get_client_rect(&x0, &y0, &x1, &y1);
-			glViewport(0, 0, x1, y1);
-
+			
+			glViewport(0, 0, width, height);
 			glClearColor(0, 0, 0, 0);
 			glClear(GL_COLOR_BUFFER_BIT);
-
-			glMatrixMode( GL_MODELVIEW );
-			glLoadIdentity();
-
-			glMatrixMode( GL_PROJECTION );
-			glLoadIdentity();
-
-			glOrtho(0, (float)x1, (float)y1, 0, -1, 1);
-			
 			glEnable(GL_BLEND);
 			glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			
+			reset_matrices_ortho(width, height);
 		}
 
-		void end(data *d)
+		void end()
 		{
 			glFlush();
 		}
 
-		void present(data *d)
-		{
-
-		}
-
-		bool get_size(data *d, int * width, int * height)
+		bool get_size(int * width, int * height)
 		{
 			int x0, y0, x1, y1;
 			get_client_rect(&x0, &y0, &x1, &y1);
@@ -208,7 +191,7 @@ namespace kosmos
 			glColor4ub((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, (color >> 24)&0xff);
 		}
 
-		void gradient_rect(data *d, float x0, float y0, float x1, float y1, unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br)
+		void gradient_rect(float x0, float y0, float x1, float y1, unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br)
 		{
 			glBegin(GL_TRIANGLE_STRIP);
 			intColor(tl);
@@ -222,7 +205,7 @@ namespace kosmos
 			glEnd();
 		}
 
-		void solid_rect(data *d, float x0, float y0, float x1, float y1, unsigned int color)
+		void solid_rect(float x0, float y0, float x1, float y1, unsigned int color)
 		{
 			intColor(color);
 			glBegin(GL_TRIANGLE_STRIP);
@@ -233,7 +216,7 @@ namespace kosmos
 			glEnd();
 		}
 
-		void line(data *d, float x0, float y0, float x1, float y1, unsigned int color)
+		void line(float x0, float y0, float x1, float y1, unsigned int color)
 		{
 			glLineWidth(1);
 			intColor(color);
@@ -243,7 +226,7 @@ namespace kosmos
 			glEnd();
 		}
 
-		void tex_rect(data *d, loaded_texture *tex, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, unsigned int color)
+		void tex_rect(loaded_texture *tex, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, unsigned int color)
 		{
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, tex->handle);
