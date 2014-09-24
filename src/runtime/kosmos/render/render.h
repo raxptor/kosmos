@@ -18,7 +18,6 @@ namespace kosmos
 		
 		void reset_matrices_ortho(int width, int height);
 
-		bool get_size(int * width, int * height);
 		void solid_rect(float x0, float y0, float x1, float y1, unsigned int color);
 		void gradient_rect(float x0, float y0, float x1, float y1, unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br);
 		void tex_rect(loaded_texture *tex, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, unsigned int color);
