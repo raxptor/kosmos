@@ -1,20 +1,19 @@
 #include <putki/builder/build.h>
 #include <putki/builder/builder.h>
-#include <putki/builder/package.h>
 #include <putki/builder/log.h>
 #include <putki/builder/resource.h>
 #include <putki/builder/build-db.h>
 #include <putki/builder/db.h>
 
-#include <builder/pngutil.h>
-#include <builder/jpge.h>
+#include "kosmos-builder-utils/pngutil.h"
+#include "kosmos-builder-utils/jpge.h"
+
+#include <inki/types/kosmos/DataContainer.h>
 
 #include <iostream>
 
-#include <inki/types/ccg-ui/DataContainer.h>
-
 namespace {
-	const char *builder_version = "datacontainerC";
+	const char *builder_version = "ksms-datacontainer";
 }
 
 struct databuilder : putki::builder::handler_i

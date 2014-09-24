@@ -1,7 +1,7 @@
-#ifndef __DATACONTAINER_H__
-#define __DATACONTAINER_H__
+#ifndef __KOSMOS_DATACONTAINER_H__
+#define __KOSMOS_DATACONTAINER_H__
 
-#include <outki/types/ccg-ui/DataContainer.h>
+#include <outki/types/kosmos/DataContainer.h>
 #include <stddef.h>
 
 namespace datacontainer

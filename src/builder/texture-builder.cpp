@@ -6,14 +6,13 @@
 #include <putki/builder/build-db.h>
 #include <putki/builder/db.h>
 
-#include <builder/pngutil.h>
-#include <builder/jpge.h>
+#include "kosmos-builder-utils/pngutil.h"
+#include "kosmos-builder-utils/jpge.h"
+#include "kosmos-builder-utils/textureconfig.h"
+
+#include <inki/types/kosmos/Texture.h>
 
 #include <iostream>
-
-#include <inki/types/ccg-ui/Texture.h>
-
-#include "textureconfig.h"
 
 namespace {
 	const char *builder_version = "texture-builder-2";

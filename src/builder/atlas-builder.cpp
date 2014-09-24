@@ -1,25 +1,21 @@
 #include <putki/builder/build.h>
 #include <putki/builder/builder.h>
-#include <putki/builder/package.h>
 #include <putki/builder/resource.h>
 #include <putki/builder/build-db.h>
 #include <putki/builder/log.h>
 #include <putki/builder/db.h>
 
+#include "kosmos-builder-utils/binpacker/maxrects_binpack.h"
+#include "kosmos-builder-utils/pngutil.h"
+#include "kosmos-builder-utils/textureconfig.h"
+
+#include <inki/types/kosmos/Texture.h>
+#include <inki/types/kosmos/Atlas.h>
+
 #include <iostream>
 #include <vector>
 #include <sstream>
-
-#include <builder/pngutil.h>
-
-#include <inki/types/ccg-ui/Texture.h>
-#include <inki/types/ccg-ui/Atlas.h>
-
-#include <binpacker/maxrects_binpack.h>
-
 #include <math.h>
-
-#include "textureconfig.h"
 
 namespace
 {

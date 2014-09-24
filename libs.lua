@@ -4,7 +4,7 @@
 	KOSMOSPATH = path.getdirectory(_SCRIPT)
 	KOSMOSLIB_INCLUDES = { KOSMOSPATH .. "/src/" }
 	KOSMOSRT_INCLUDES = { KOSMOSPATH .. "/src/runtime" }
-	KOSMOSLIB_LINKS = { "kosmos-builder-lib", "libpng", "libz" }
+	KOSMOSLIB_LINKS = { "kosmos-builder", "libpng", "libz" }
 	
 	function kosmos_use_builder_lib()
 		putki_typedefs_runtime("src/types", false, KOSMOSPATH)
@@ -18,7 +18,7 @@
                 links {"kosmos-runtime"}
 	end
 
-	project "kosmos-builder-lib"
+	project "kosmos-builder"
 
 		kind "StaticLib"
 
@@ -28,15 +28,16 @@
 		putki_typedefs_builder("src/types", true)
 		putki_use_builder_lib()
 		
-		includedirs { "src" }
 		includedirs { "external/libpng"}
+		includedirs { "src" }
 
 		files { "src/builder/**.*" }
 		files { "src/binpacker/**.*" }
+		files { "src/kosmos-builder-utils/**.cpp" }
+		files { "src/kosmos-builder-utils/**.h" }
 
 		links { "libpng" }
 		links { "libz" }
-	end
 
 	project "kosmos-runtime"
 
@@ -44,12 +45,9 @@
 		targetname "kosmos-runtime"
 		kind "StaticLib"
 		
-		includedirs { "src/untime" }
+		includedirs { "src/runtime/kosmos" }
                 files { "src/runtime/**.cpp" }
 		files { "src/runtime/**.h" }
 		
 		putki_use_runtime_lib()
 		putki_typedefs_runtime("src/types", true)
-
-	end
-	
