@@ -4,16 +4,19 @@
 #include <outki/types/kosmos/DataContainer.h>
 #include <stddef.h>
 
-namespace datacontainer
+namespace kosmos
 {
-	struct loaded_data
+	namespace datacontainer
 	{
-		unsigned char *data;
-		size_t size;
-	};
+		struct loaded_data
+		{
+			unsigned char *data;
+			size_t size;
+		};
 
-	loaded_data* load(outki::DataContainer *container, bool block_until_loaded);
-	void release(loaded_data *d);
+		loaded_data* load(outki::DataContainer *container, bool block_until_loaded);
+		void release(loaded_data *d);
+	}
 }
 
 #endif

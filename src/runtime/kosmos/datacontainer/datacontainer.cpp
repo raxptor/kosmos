@@ -2,92 +2,95 @@
 #include <putki/log/log.h>
 
 #include "datacontainer/datacontainer.h"
+#include "log/log.h"
 
 #include <iostream>
 #include <map>
 #include <fstream>
 
-namespace datacontainer
+namespace kosmos
 {
-	struct loaded_data_internal : loaded_data
+	namespace datacontainer
 	{
-		outki::DataContainer *source;
-		bool allocated;
-		int refcount;
-	};
-
-	typedef std::map<outki::DataContainer*, loaded_data_internal*> LoadMap;
-	LoadMap s_loaded;
-
-	loaded_data* load(outki::DataContainer *container, bool block_until_loaded)
-	{
-		LoadMap::iterator i = s_loaded.find(container);
-		if (i != s_loaded.end())
+		struct loaded_data_internal : loaded_data
 		{
-			PTK_DEBUG("Had this loaded already, returning pointer to old record")
-			i->second->refcount++;
-			return i->second;
-		}
+			outki::DataContainer *source;
+			bool allocated;
+			int refcount;
+		};
 
-		loaded_data_internal *nr = new loaded_data_internal();
-		nr->allocated = false;
-		nr->refcount = 1;
-		nr->source = container;
+		typedef std::map<outki::DataContainer*, loaded_data_internal*> LoadMap;
+		LoadMap s_loaded;
 
-		outki::DataContainerOutput *output = container->Output;
-		PTK_DEBUG("Loading data container with output " << output);
-
-		if (!output)
+		loaded_data* load(outki::DataContainer *container, bool block_until_loaded)
 		{
-			PTK_DEBUG("Data was embedded");
-			nr->data = container->Bytes;
-			nr->size = (size_t) container->Bytes_size;
-			s_loaded.insert(LoadMap::value_type(container, nr));
-			return nr;
-		}
-		else if (outki::DataContainerOutputFile *file = output->exact_cast<outki::DataContainerOutputFile>())
-		{
-			char real_path[512];
-			putki::format_file_path(file->FilePath, real_path);
-			PTK_DEBUG("Loading file [" << real_path << "]");
-
-			std::ifstream in(real_path, std::ios::binary);
-			if (!in.good())
+			LoadMap::iterator i = s_loaded.find(container);
+			if (i != s_loaded.end())
 			{
-				PTK_DEBUG("Failed to open file [" << real_path << "]!");
-				delete nr;
-				return 0;
+				KOSMOS_DEBUG("Had this loaded already, returning pointer to old record")
+				i->second->refcount++;
+				return i->second;
 			}
 
-			in.seekg(0, std::ios::end);
-			std::streamoff filesize = in.tellg();
+			loaded_data_internal *nr = new loaded_data_internal();
+			nr->allocated = false;
+			nr->refcount = 1;
+			nr->source = container;
 
-			nr->data = new unsigned char[(unsigned long)filesize];
-			nr->size = (size_t) filesize;
-			nr->allocated = true;
-			in.seekg(0, std::ios_base::beg);
-			in.read((char*)nr->data, filesize);
-			in.close();
-			s_loaded.insert(LoadMap::value_type(container, nr));
-			return nr;
+			outki::DataContainerOutput *output = container->Output;
+			KOSMOS_DEBUG("Loading data container with output " << output);
+
+			if (!output)
+			{
+				KOSMOS_DEBUG("Data was embedded");
+				nr->data = container->Bytes;
+				nr->size = (size_t) container->Bytes_size;
+				s_loaded.insert(LoadMap::value_type(container, nr));
+				return nr;
+			}
+			else if (outki::DataContainerOutputFile *file = output->exact_cast<outki::DataContainerOutputFile>())
+			{
+				char real_path[512];
+				putki::format_file_path(file->FilePath, real_path);
+				KOSMOS_DEBUG("Loading file [" << real_path << "]");
+
+				std::ifstream in(real_path, std::ios::binary);
+				if (!in.good())
+				{
+					KOSMOS_DEBUG("Failed to open file [" << real_path << "]!");
+					delete nr;
+					return 0;
+				}
+
+				in.seekg(0, std::ios::end);
+				std::streamoff filesize = in.tellg();
+
+				nr->data = new unsigned char[(unsigned long)filesize];
+				nr->size = (size_t) filesize;
+				nr->allocated = true;
+				in.seekg(0, std::ios_base::beg);
+				in.read((char*)nr->data, filesize);
+				in.close();
+				s_loaded.insert(LoadMap::value_type(container, nr));
+				return nr;
+			}
+			else
+			{
+				KOSMOS_DEBUG("Data was not embedded");
+				return 0;
+			}
 		}
-		else
+
+		void release(loaded_data *d)
 		{
-			PTK_DEBUG("Data was not embedded");
-			return 0;
+			loaded_data_internal *record = (loaded_data_internal*) d;
+			--record->refcount;
+			KOSMOS_DEBUG("Refcount is now " << record->refcount);
+			if (!record->refcount)
+			{
+				delete record;
+				s_loaded.erase(s_loaded.find(record->source));
+			}
 		}
 	}
-
-	void release(loaded_data *d)
-	{
-		loaded_data_internal *record = (loaded_data_internal*) d;
-		--record->refcount;
-		PTK_DEBUG("Refcount is now " << record->refcount);
-		if (!record->refcount)
-		{
-			delete record;
-			s_loaded.erase(s_loaded.find(record->source));
-		}
-	}
-
 }
