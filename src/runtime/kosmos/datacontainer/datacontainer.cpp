@@ -88,8 +88,8 @@ namespace kosmos
 			KOSMOS_DEBUG("Refcount is now " << record->refcount);
 			if (!record->refcount)
 			{
-				delete record;
 				s_loaded.erase(s_loaded.find(record->source));
+				delete record;
 			}
 		}
 	}
