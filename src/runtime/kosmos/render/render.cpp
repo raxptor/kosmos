@@ -248,6 +248,7 @@ namespace kosmos
 		{
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, tex->handle);
+			intColor(color);
 
 			glColor4ub((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, (color >> 24)&0xff);
 			glBegin(GL_TRIANGLE_STRIP);
