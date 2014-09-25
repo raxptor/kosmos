@@ -148,6 +148,22 @@ namespace kosmos
 			glOrtho(0, (float)width, (float)height, 0, -1, 1);
 		}
 
+		void transform_2d(float scalex, float scaley, float ofsx, float ofsy)
+		{
+			glScalef(scalex, scaley, 1);
+			glTranslatef(ofsx, ofsy, 0);
+		}
+
+		void push_matrix()
+		{
+			glPushMatrix();
+		}
+		
+		void pop_matrix()
+		{
+			glPopMatrix();
+		}
+
 		void begin(int width, int height, bool clearcolor, bool cleardepth, unsigned int clear_color)
 		{
 			//
@@ -170,6 +186,8 @@ namespace kosmos
 			glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			
 			reset_matrices_ortho(width, height);
+
+			glMatrixMode(GL_MODELVIEW);
 		}
 
 		void end()
