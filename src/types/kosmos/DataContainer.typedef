@@ -28,12 +28,12 @@ DataContainerConfiguration no-out rtti
 	ptr DataFileBase FileBase
 }
 
-DataContainer [in, out] rtti non-instantiable
+DataContainer [in, out] rtti
 {
 	[no-out] ptr DataContainerConfiguration Config
 	[no-out] string SourceFile
-	byte[] Bytes
-	[no-out] string FileType
+	[hidden] byte[] Bytes
+	[hidden] [no-out] string FileType
 	[hidden] ptr DataContainerOutput Output
 }
 

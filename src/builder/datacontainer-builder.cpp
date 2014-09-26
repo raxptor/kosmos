@@ -42,7 +42,15 @@ struct databuilder : putki::builder::handler_i
 			cont->Bytes.clear();
 			RECORD_INFO(record, "Using source file from " << cont->SourceFile);
 
-			if (conf->Mode != inki::DCOUT_FILE && conf->Mode != inki::DCOUT_DISCARD)
+			if (cont->FileType.empty())
+			{
+				// Steal file type from input
+				int last_dot = cont->SourceFile.find_last_of('.');
+				if (last_dot != std::string::npos)
+					cont->FileType = cont->SourceFile.substr(last_dot + 1, cont->SourceFile.size() - last_dot - 1);
+			}
+
+			if (conf->Mode != inki::DCOUT_DISCARD)
 			{
 				const char *bytes;
 				long long size;
@@ -58,8 +66,6 @@ struct databuilder : putki::builder::handler_i
 				}
 			}
 		}
-
-
 				
 		switch (conf->Mode)
 		{
