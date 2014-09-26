@@ -35,6 +35,31 @@ struct databuilder : putki::builder::handler_i
 		}
 		
 		putki::build_db::add_input_dependency(record, putki::db::pathof(input, conf));
+
+
+		if (!cont->SourceFile.empty())
+		{
+			cont->Bytes.clear();
+			RECORD_INFO(record, "Using source file from " << cont->SourceFile);
+
+			if (conf->Mode != inki::DCOUT_FILE && conf->Mode != inki::DCOUT_DISCARD)
+			{
+				const char *bytes;
+				long long size;
+				if (!putki::resource::load(builder, cont->SourceFile.c_str(), &bytes, &size))
+				{
+					RECORD_ERROR(record, "Failed to read [" << cont->SourceFile << "]!");
+
+				}
+				else
+				{
+					cont->Bytes.insert(cont->Bytes.begin(), bytes, bytes + size);
+					putki::resource::free(bytes);
+				}
+			}
+		}
+
+
 				
 		switch (conf->Mode)
 		{
