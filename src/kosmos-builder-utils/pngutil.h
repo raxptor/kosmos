@@ -14,8 +14,9 @@ namespace ccgui
 			char *output;
 			size_t size;
 		};
-		
-		write_buffer write_to_mem(unsigned int *pixbuf, unsigned int width, unsigned int height);
+
+		// compression level 0=no compression 9=best slowest
+		write_buffer write_to_mem(unsigned int *pixbuf, unsigned int width, unsigned int height, int compression_level=1);
 
 		struct loaded_png
 		{

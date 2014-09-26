@@ -39,7 +39,7 @@ TextureOutputFormat rtti non-instantiable no-out
 
 TextureOutputFormatPng : TextureOutputFormat no-out
 {
-
+	int CompressionLevel = 5;
 }
 
 TextureOutputFormatJpeg : TextureOutputFormat no-out

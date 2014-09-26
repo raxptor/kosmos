@@ -44,8 +44,12 @@ namespace ccgui
 			}
 		}
 
-		write_buffer write_to_mem(unsigned int *pixbuf, unsigned int width, unsigned int height)
+		write_buffer write_to_mem(unsigned int *pixbuf, unsigned int width, unsigned int height, int compression_level)
 		{
+			write_buffer wb;
+			wb.size = 0;
+			wb.output = 0;
+			
 			png_structp png_ptr = NULL;
 			png_infop info_ptr = NULL;
 			size_t x, y;
@@ -63,6 +67,8 @@ namespace ccgui
 			{
 				goto png_create_info_struct_failed;
 			}
+
+			png_set_compression_level(png_ptr, compression_level);
 
 			/* Set image attributes. */
 			png_set_IHDR (png_ptr,
@@ -92,10 +98,6 @@ namespace ccgui
 
 			/* Write the image data to "fp". */
 
-			write_buffer wb;
-			wb.size = 0;
-			wb.output = 0;
-
 			png_set_write_fn(png_ptr, &wb, &write, &flush);
 
 			png_set_rows (png_ptr, info_ptr, row_pointers);
@@ -103,8 +105,6 @@ namespace ccgui
 
 			/* The routine has successfully written the file, so we set
 			        "status" to a value which indicates success. */
-
-			status = 0;
 
 			for (y=0;y<height;y++)
 			{
@@ -122,7 +122,7 @@ png_create_write_struct_failed:
 		std::string write_to_temp(putki::builder::data *builder, const char *path, unsigned int *pixbuf, unsigned int width, unsigned int height)
 		{
 			std::string outpath;
-			write_buffer wb = write_to_mem(pixbuf, width, height);
+			write_buffer wb = write_to_mem(pixbuf, width, height, 1);
 			if (wb.output)
 			{
 				outpath = putki::resource::save_temp(builder, path, wb.output, (long long) wb.size);
@@ -135,7 +135,7 @@ png_create_write_struct_failed:
 		std::string write_to_output(putki::builder::data *builder, const char *path, unsigned int *pixbuf, unsigned int width, unsigned int height)
 		{
 			std::string outpath;
-			write_buffer wb = write_to_mem(pixbuf, width, height);
+			write_buffer wb = write_to_mem(pixbuf, width, height, 9);
 			if (wb.output)
 			{
 				outpath = putki::resource::save_output(builder, path, wb.output, (long long) wb.size);
@@ -143,8 +143,6 @@ png_create_write_struct_failed:
 			}
 			return outpath;
 		}
-
-
 
 		bool load_internal(const char *path, loaded_png *out, bool header_only)
 		{

@@ -184,7 +184,7 @@ struct texbuilder : putki::builder::handler_i
 			
 			RECORD_INFO(record, "[TextureOutputFormatPng] - Source image [" << png.width << "x" << png.height << "] => [" << texture->Width << "x" << texture->Height << "]")
 			
-			ccgui::pngutil::write_buffer wb = ccgui::pngutil::write_to_mem(outData, out_width, out_height);
+			ccgui::pngutil::write_buffer wb = ccgui::pngutil::write_to_mem(outData, out_width, out_height, ((inki::TextureOutputFormatPng*)outputFormat)->CompressionLevel);
 			
 			texture->Output = &pngObj->parent;
 			
