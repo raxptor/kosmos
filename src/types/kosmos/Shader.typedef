@@ -1,0 +1,24 @@
+#include DataContainer.typedef
+
+Shader rtti non-instantiable
+{
+	[no-out] file SourceFile
+	[hidden] string Data
+}
+
+VertexShader : Shader
+{
+
+}
+
+FragmentShader : Shader
+{
+
+}
+
+ShaderProgram
+{
+	ptr VertexShader VertexShader
+	ptr FragmentShader FragmentShader
+}
+

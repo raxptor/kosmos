@@ -94,7 +94,6 @@ namespace kosmos
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR  );
 						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->source_tex->Width, tex->source_tex->Height,
 							      0, GL_RGBA, GL_UNSIGNED_BYTE, loaded->data);
-						glBindTexture(GL_TEXTURE_2D, 0);
 						KOSMOS_INFO("Updated texture [" << tex->handle << "] with " << loaded->size << " bytes");
 					}
 					break;
@@ -141,27 +140,29 @@ namespace kosmos
 		
 		void reset_matrices_ortho(int width, int height)
 		{
+			/*
 			glMatrixMode( GL_MODELVIEW );
 			glLoadIdentity();
 			glMatrixMode( GL_PROJECTION );
 			glLoadIdentity();
 			glOrtho(0, (float)width, (float)height, 0, -1, 1);
+			*/
 		}
 
 		void transform_2d(float scalex, float scaley, float ofsx, float ofsy)
 		{
-			glScalef(scalex, scaley, 1);
-			glTranslatef(ofsx, ofsy, 0);
+		//	glScalef(scalex, scaley, 1);
+		//	glTranslatef(ofsx, ofsy, 0);
 		}
 
 		void push_matrix()
 		{
-			glPushMatrix();
+		//	glPushMatrix();
 		}
 		
 		void pop_matrix()
 		{
-			glPopMatrix();
+		//	glPopMatrix();
 		}
 
 		void begin(int width, int height, bool clearcolor, bool cleardepth, unsigned int clear_color)
@@ -180,14 +181,18 @@ namespace kosmos
 			}
 			
 			glViewport(0, 0, width, height);
-			glClearColor(0, 0, 0, 0);
+			glClearColor(0.01f *(rand()%100), 0, 0, 0);
 			glClear(GL_COLOR_BUFFER_BIT);
-			glEnable(GL_BLEND);
-			glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_DEPTH_TEST);
 			
-			reset_matrices_ortho(width, height);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			
+			static GLuint VertexArrayID = -1;
+			if (VertexArrayID == -1)
+				glGenVertexArraysAPPLE(1, &VertexArrayID);
+			glBindVertexArrayAPPLE(VertexArrayID);
 
-			glMatrixMode(GL_MODELVIEW);
 		}
 
 		void end()
@@ -209,31 +214,6 @@ namespace kosmos
 			glColor4ub((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, (color >> 24)&0xff);
 		}
 
-		void gradient_rect(float x0, float y0, float x1, float y1, unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br)
-		{
-			glBegin(GL_TRIANGLE_STRIP);
-			intColor(tl);
-			glVertex2f(x0,y0);
-			intColor(tr);
-			glVertex2f(x1,y0);
-			intColor(bl);
-			glVertex2f(x0,y1);
-			intColor(br);
-			glVertex2f(x1,y1);
-			glEnd();
-		}
-
-		void solid_rect(float x0, float y0, float x1, float y1, unsigned int color)
-		{
-			intColor(color);
-			glBegin(GL_TRIANGLE_STRIP);
-			glVertex2f(x0,y0);
-			glVertex2f(x1,y0);
-			glVertex2f(x0,y1);
-			glVertex2f(x1,y1);
-			glEnd();
-		}
-
 		void line(float x0, float y0, float x1, float y1, unsigned int color)
 		{
 			glLineWidth(1);
@@ -244,26 +224,9 @@ namespace kosmos
 			glEnd();
 		}
 
-		void tex_rect(loaded_texture *tex, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, unsigned int color)
+		int tex_id(loaded_texture *tex)
 		{
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, tex->handle);
-			intColor(color);
-
-			glColor4ub((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, (color >> 24)&0xff);
-			glBegin(GL_TRIANGLE_STRIP);
-			glTexCoord2f(u0, v0);
-			glVertex2f(x0,y0);
-			glTexCoord2f(u1, v0);
-			glVertex2f(x1,y0);
-			glTexCoord2f(u0, v1);
-			glVertex2f(x0,y1);
-			glTexCoord2f(u1, v1);
-			glVertex2f(x1,y1);
-			glEnd();
-
-			glDisable(GL_TEXTURE_2D);
+			return tex->handle;
 		}
-
 	}
 }
