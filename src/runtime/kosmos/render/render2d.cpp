@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace kosmos
 {
@@ -24,19 +25,39 @@ namespace kosmos
 			unsigned int color;
 		};
 		
-		struct stream
+		struct state_buf
 		{
-			GLuint vbo;
-			vertex_t *verts, *writeptr;
-			size_t bufsize;
-			
 			float width, height;
 			float xs, ys;
 			float xofs, yofs;
 			
-			shader::program *prog_solid, *prog_textured, *prog;
 			render::loaded_texture *tex0;
+			shader::program *prog;
 		};
+		
+		struct render_block
+		{
+			state_buf state;
+			vertex_t *begin, *end;
+		};
+		
+		struct stream
+		{
+			GLuint vbo;
+			vertex_t *verts;
+			size_t bufsize;
+			shader::program *prog_solid, *prog_textured;
+			state_buf state;
+			std::vector<render_block> blocks;
+			bool touched_state;
+		};
+		
+		#define SET_STATE(stream, field, value) \
+			if (stream->state. field != value) { \
+				stream->touched_state = true; \
+				stream->state. field = value; \
+			} \
+				
 	
 		stream *stream_create(unsigned int triangles)
 		{
@@ -44,22 +65,20 @@ namespace kosmos
 			glGenBuffers(1, &s->vbo);
 			s->bufsize = 6 * triangles;
 			s->verts = new vertex_t[s->bufsize];
-			s->writeptr = s->verts;
-			s->prog_solid = s->prog_textured = s->prog = 0;
-			s->tex0 = 0;
+
+			memset(&s->state, 0x00, sizeof(state_buf));
+			s->touched_state = false;
+			s->state.xs = s->state.ys = 1;
 			
-			s->width = s->height = 1024;
-			s->xs = s->ys = 1;
-			s->xofs = s->yofs = 0;;
  			return s;
 		}
 	
 		void set_2d_transform(stream *s, float xs, float ys, float xofs, float yofs)
 		{
-			s->xs = xs;
-			s->ys = ys;
-			s->xofs = xofs;
-			s->yofs = yofs;
+			SET_STATE(s, xs, xs)
+			SET_STATE(s, ys, ys)
+			SET_STATE(s, xofs, xofs)
+			SET_STATE(s, yofs, yofs)
 		}
 			
 		void stream_free(stream *s)
@@ -69,71 +88,128 @@ namespace kosmos
 			delete s;
 		}
 		
-		void submit(stream *s)
+		void submit_block(stream *s, render_block *block)
 		{
-			if (s->writeptr == s->verts)
-				return;
-
 			float mtx[16] = {0};
 			mtx[0] = mtx[5] = mtx[10] = mtx[15] = 1.0f;
 			
-			mtx[0] = (2.0f / s->width) * s->xs;
-			mtx[5] = -(2.0f / s->height) * s->ys;
+			state_buf *state = &block->state;
 			
-			mtx[12] = -1.0f + (s->xs * mtx[0]);
-			mtx[13] = 1 - (s->ys * mtx[0]);
+			mtx[0] = (2.0f / state->width) * state->xs;
+			mtx[5] = -(2.0f / state->height) * state->ys;
 			
-			shader::program_use(s->prog);
-			glUniformMatrix4fv(shader::find_uniform(s->prog, "proj"), 1, GL_FALSE, mtx);
-
-			glBindBuffer(GL_ARRAY_BUFFER, s->vbo);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * (s->writeptr - s->verts), s->verts, GL_STREAM_DRAW);
+			mtx[12] = -1.0f + (state->xofs * mtx[0]);
+			mtx[13] = 1 + (state->yofs * mtx[5]);
+			
+			shader::program_use(state->prog);
+			
+			glUniformMatrix4fv(shader::find_uniform(state->prog, "proj"), 1, GL_FALSE, mtx);
 			
 			vertex_t *v0 = 0;
 			void *uv0 = &v0->u0;
 			void *col = &v0->color;
 			
-			glVertexAttribPointer(shader::find_attribute(s->prog, "vpos"), 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), 0);
-			glVertexAttribPointer(shader::find_attribute(s->prog, "uv0"), 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), uv0);
-			glVertexAttribPointer(shader::find_attribute(s->prog, "color"), 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_t), col);
+			glVertexAttribPointer(shader::find_attribute(state->prog, "vpos"), 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), 0);
+			glVertexAttribPointer(shader::find_attribute(state->prog, "uv0"), 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), uv0);
+			glVertexAttribPointer(shader::find_attribute(state->prog, "color"), 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(vertex_t), col);
 			
-			glEnableVertexAttribArray(shader::find_attribute(s->prog, "vpos"));
-			glEnableVertexAttribArray(shader::find_attribute(s->prog, "uv0"));
-			glEnableVertexAttribArray(shader::find_attribute(s->prog, "color"));
+			glEnableVertexAttribArray(shader::find_attribute(state->prog, "vpos"));
+			glEnableVertexAttribArray(shader::find_attribute(state->prog, "uv0"));
+			glEnableVertexAttribArray(shader::find_attribute(state->prog, "color"));
 			
-			if (s->tex0)
+			if (state->tex0)
 			{
 				glEnable(GL_TEXTURE_2D);
-				glUniform1i(shader::find_uniform(s->prog, "texture"), 0);
+				glUniform1i(shader::find_uniform(state->prog, "texture"), 0);
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, render::tex_id(s->tex0));
-				kosmos::shader::program_use(s->prog_textured);
+				glBindTexture(GL_TEXTURE_2D, render::tex_id(state->tex0));
 			}
 			else
 			{
 				glDisable(GL_TEXTURE_2D);
-				kosmos::shader::program_use(s->prog_solid);
 			}
-						
+									
 			glEnable(GL_BLEND);
 			glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			
-			glDrawArrays(GL_TRIANGLES, 0, s->writeptr - s->verts);
-			s->writeptr = s->verts;
+			glDrawArrays(GL_TRIANGLES, block->begin - s->verts, block->end - block->begin);
+		}
+		
+		void submit(stream *s)
+		{
+			if (s->blocks.empty())
+				return;
+				
+			// all the vertices for these blocks.
+			glBindBuffer(GL_ARRAY_BUFFER, s->vbo);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * (s->blocks.back().end - s->blocks.front().begin), s->verts, GL_STREAM_DRAW);
+		
+			for (int i=0;i!=s->blocks.size();i++)
+				submit_block(s, &s->blocks[i]);
+
+			s->blocks.clear();
+		}
+		
+		vertex_t *start_insert(stream *s, unsigned int count)
+		{
+			if (s->blocks.empty())
+			{
+				// start new block with current state
+				render_block tmp;
+				s->blocks.push_back(tmp);
+				render_block & rb = s->blocks.back();
+				rb.state = s->state;
+				rb.begin = s->verts;
+				rb.end = s->verts + count;
+				if (count > s->bufsize)
+				{
+					KOSMOS_ERROR("No room!");
+					return 0;
+				}
+				s->touched_state = false;
+				return s->verts;
+			}
+			
+			render_block *rb = &s->blocks.back();
+		
+			// no room?
+			if (rb->end + count > (s->verts + s->bufsize))
+			{
+				submit(s);
+				return start_insert(s, count);
+			}
+			
+			if (!s->touched_state || !memcmp(&s->state, &rb->state, sizeof(state_buf)))
+			{
+				// continue on the same block since they have same state
+				s->touched_state = false;
+				vertex_t *ins = rb->end;
+				rb->end += count;
+				return ins;
+			}
+			
+			// state is different but there is room
+			
+			render_block tmp;
+			s->blocks.push_back(tmp);
+			render_block & nb = s->blocks.back();
+			nb.state = s->state;
+			nb.begin = rb->end;
+			nb.end = nb.begin + count;
+			s->touched_state = false;
+			return nb.begin;
 		}
 		
 		void set_viewport(stream *s, float width, float height)
 		{
-			submit(s);
-			s->width = width;
-			s->height = height;
+			SET_STATE(s, width, width)
+			SET_STATE(s, height, height)
 		}
 		
 		void use_programs(stream *s, shader::program *prog_solid, shader::program *prog_tex)
 		{
 			s->prog_solid = prog_solid;
 			s->prog_textured = prog_tex;
-			submit(s);
 		}
 				
 		void stream_done(stream *s)
@@ -143,13 +219,10 @@ namespace kosmos
 	
 		void gradient_rect(stream *s, float x0, float y0, float x1, float y1, unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br)
 		{
-			if ((s->writeptr + 4) > (s->verts + s->bufsize))
-				submit(s);
-		
-			vertex_t *out = s->writeptr;
+			SET_STATE(s, prog, s->prog_solid)
+			SET_STATE(s, tex0, 0)
 			
-			s->prog = s->prog_solid;
-			s->tex0 = 0;
+			vertex_t *out = start_insert(s, 6);
 
 			out[0].x = x0;
 			out[0].y = y0;
@@ -180,20 +253,15 @@ namespace kosmos
 			out[5].y = y1;
 			out[5].u0 = out[1].v0 = 0;
 			out[5].color = br;
-			
-			s->writeptr += 6;
 		}
 		
 		void tex_rect(stream *s, render::loaded_texture *tex, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, unsigned int color)
 		{
-			submit(s);
-			
-			s->prog = s->prog_textured;
-			s->tex0 = tex;
-			
-			vertex_t *out = s->writeptr;
+			SET_STATE(s, prog, s->prog_textured)
+			SET_STATE(s, tex0, tex)
+					
+			vertex_t *out = start_insert(s, 6);
 		
-
 			out[0].x = x0;
 			out[0].y = y0;
 			out[0].u0 = u0;
@@ -229,10 +297,13 @@ namespace kosmos
 			out[5].u0 = u1;
 			out[5].v0 = v1;
 			out[5].color = color;
-
-			s->writeptr += 6;
 		}
 	
+		void screen_to_local(stream *s, float x, float y, float *xout, float *yout)
+		{
+			*xout = (x / s->state.xs) - s->state.xofs;
+			*yout = (y / s->state.ys) - s->state.yofs;
+		}
 		
 		void solid_rect(stream *s, float x0, float y0, float x1, float y1, unsigned int color)
 		{

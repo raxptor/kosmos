@@ -3,10 +3,8 @@
 
 namespace kosmos
 {
-	namespace shader
-	{
-		struct program;
-	}
+	namespace shader { struct program; }
+	namespace render { struct loaded_texture; }
 	
 	namespace render2d
 	{
@@ -23,6 +21,8 @@ namespace kosmos
 		void tex_rect(stream *s, render::loaded_texture *tex, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, unsigned int color);
 		void solid_rect(stream *s, float x0, float y0, float x1, float y1, unsigned int color);
 		void gradient_rect(stream *s, float x0, float y0, float x1, float y1, unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br);
+		
+		float screen_to_local(stream *s, float x, float y, float *xout, float *yout);
 	
 	}
 }
