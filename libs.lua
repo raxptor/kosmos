@@ -46,6 +46,7 @@
 		kind "StaticLib"
 		
 		includedirs { "src/runtime/kosmos" }
+		
                 files { "src/runtime/**.cpp" }
 		files { "src/runtime/**.h" }
 		

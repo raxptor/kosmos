@@ -1,7 +1,7 @@
 #include "shader.h"
 
 #include <outki/types/kosmos/Shader.h>
-#include "log.h"
+#include "log/log.h"
 
 #include <map>
 

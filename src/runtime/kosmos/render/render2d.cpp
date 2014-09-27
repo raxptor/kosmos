@@ -5,8 +5,8 @@
 #include <outki/types/kosmos/Texture.h>
 #include <OpenGL/gl.h>
 
-#include <render/shader.h>
-#include <render/render.h>
+#include "render/shader.h"
+#include "render/render.h"
 
 #include <inttypes.h>
 #include <stdio.h>
