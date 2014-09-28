@@ -1,7 +1,7 @@
 	project "libpng"
 		kind "StaticLib"
 		language "c"
-		targetname "libkosmospng"
+		targetname "libpng"
 		files { "*.c", "*.h" }
 		excludes { "example.c" }
 		includedirs (ZLIB_INCLUDES)
