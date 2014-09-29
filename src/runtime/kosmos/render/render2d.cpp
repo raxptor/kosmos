@@ -30,7 +30,7 @@ namespace kosmos
 			float width, height;
 			float xs, ys;
 			float xofs, yofs;
-			
+			GLuint primitive;
 			render::loaded_texture *tex0;
 			shader::program *prog;
 		};
@@ -40,7 +40,8 @@ namespace kosmos
 			state_buf state;
 			vertex_t *begin, *end;
 		};
-		
+
+
 		struct stream
 		{
 			GLuint vbo;
@@ -132,7 +133,7 @@ namespace kosmos
 			glEnable(GL_BLEND);
 			glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			
-			glDrawArrays(GL_TRIANGLES, block->begin - s->verts, block->end - block->begin);
+			glDrawArrays(state->primitive, block->begin - s->verts, (block->end - block->begin));
 		}
 		
 		void submit(stream *s)
@@ -216,11 +217,31 @@ namespace kosmos
 		{
 			submit(s);
 		}
-	
+
+		void solid_line(stream *s, float x0, float y0, float x1, float y1, unsigned int color)
+		{
+			SET_STATE(s, prog, s->prog_solid)
+			SET_STATE(s, tex0, 0)
+			SET_STATE(s, primitive, GL_LINES)
+
+			vertex_t *out = start_insert(s, 2);
+
+			out[0].x = x0;
+			out[0].y = y0;
+			out[0].u0 = out[0].v0 = 0;
+			out[0].color = color;
+
+			out[1].x = x1;
+			out[1].y = y1;
+			out[1].u0 = out[1].v0 = 0;
+			out[1].color = color;
+		}
+
 		void gradient_rect(stream *s, float x0, float y0, float x1, float y1, unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br)
 		{
 			SET_STATE(s, prog, s->prog_solid)
 			SET_STATE(s, tex0, 0)
+			SET_STATE(s, primitive, GL_TRIANGLES)
 			
 			vertex_t *out = start_insert(s, 6);
 
@@ -259,7 +280,8 @@ namespace kosmos
 		{
 			SET_STATE(s, prog, s->prog_textured)
 			SET_STATE(s, tex0, tex)
-					
+			SET_STATE(s, primitive, GL_TRIANGLES)
+
 			vertex_t *out = start_insert(s, 6);
 		
 			out[0].x = x0;

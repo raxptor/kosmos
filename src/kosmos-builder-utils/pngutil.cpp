@@ -176,23 +176,30 @@ png_create_write_struct_failed:
 			png_init_io(png_ptr, fp);
 			png_set_sig_bytes(png_ptr, sig_read);
 
-			png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
-
 			png_uint_32 width, height;
 			int bit_depth;
-			png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
-
-			out->width = width;
-			out->height = height;
-			out->bpp = 32;
 
 			if (header_only)
 			{
+				png_read_info(png_ptr, info_ptr);
+				png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
+
+				out->width = width;
+				out->height = height;
+				out->bpp = 32;
+
 				out->pixels = 0;
 				png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 				fclose(fp);
 				return true;
 			}
+
+			png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND, NULL);
+			png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
+
+			out->width = width;
+			out->height = height;
+			out->bpp = 32;
 
 			unsigned int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
 			out->pixels = (unsigned int *) ::malloc(4 * width * height);
