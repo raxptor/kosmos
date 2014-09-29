@@ -52,7 +52,7 @@ namespace kosmos
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST  );
-			unsigned char pixels[] = {0xff,0xff,0xff,0xff};
+			unsigned char pixels[] = {0xff,0x00,0xff,0xff};
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1,
 				      0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -60,6 +60,12 @@ namespace kosmos
 
 		void update_texture(loaded_texture *tex)
 		{
+			if (LIVEUPDATE_ISNULL(tex->container))
+			{
+				empty_texture(tex->handle);
+				return;
+			}
+
 			datacontainer::loaded_data *loaded = datacontainer::load(tex->container, true);
 			if (!loaded || !loaded->size)
 			{
@@ -68,7 +74,7 @@ namespace kosmos
 				return;
 			}
 
-			if (!loaded->size)
+			if (!loaded->size || !tex->source_tex->Output)
 			{
 				KOSMOS_WARNING("Empty texture?!")
 				empty_texture(tex->handle);
@@ -118,6 +124,8 @@ namespace kosmos
 				i->second->refcount++;
 				return i->second;
 			}
+
+			LIVE_UPDATE(&texture);
 
 			if (!texture->Output)
 			{
@@ -171,7 +179,25 @@ namespace kosmos
 			LoadedTextures::iterator i = s_textures.begin();
 			while (i != s_textures.end())
 			{
-				if (LIVE_UPDATE(&i->second->container))
+				bool upd = false;
+				if (LIVE_UPDATE(&i->second->source_tex))
+				{
+					if (i->second->source_tex->Output)
+						i->second->container = i->second->source_tex->Output->Data;
+					else
+						i->second->container = 0;
+					upd = true;
+				}
+
+				if (i->second->container)
+				{
+					if (LIVE_UPDATE(&i->second->container))
+						upd = true;
+					if (LIVE_UPDATE(&i->second->container->Output))
+						upd = true;
+				}
+
+				if (upd)
 				{
 					KOSMOS_INFO("Texture live updated");
 					update_texture(i->second);

@@ -157,6 +157,17 @@ png_create_write_struct_failed:
 				return false;
 			}
 
+			// try reading
+			char tmpbuf[16];
+			int rd = fread(tmpbuf, 1, sizeof(tmpbuf), fp);
+			if (rd != sizeof(tmpbuf))
+			{
+				fclose(fp);
+				return false;
+			}
+
+			fseek(fp, 0, SEEK_SET);
+
 			png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
 
 			if (png_ptr == NULL)

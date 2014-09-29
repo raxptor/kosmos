@@ -1,6 +1,8 @@
 #include <putki/config.h>
 #include <putki/log/log.h>
 
+#include <putki/liveupdate/liveupdate.h>
+
 #include "datacontainer/datacontainer.h"
 #include "log/log.h"
 
@@ -27,9 +29,22 @@ namespace kosmos
 			LoadMap::iterator i = s_loaded.find(container);
 			if (i != s_loaded.end())
 			{
-				KOSMOS_DEBUG("Had this loaded already, returning pointer to old record")
-				i->second->refcount++;
-				return i->second;
+				if (LIVE_UPDATE(&i->second->source) || (i->second->source->Output && LIVE_UPDATE(&i->second->source->Output)))
+				{
+					if (--i->second->refcount == 0)
+					{
+						KOSMOS_DEBUG("Datacontainer updated out of existence")
+						if (i->second->allocated)
+							delete [] i->second->data;
+					}
+					s_loaded.erase(i);
+				}
+				else
+				{
+					KOSMOS_DEBUG("Had this loaded already, returning pointer to old record")
+					i->second->refcount++;
+					return i->second;
+				}
 			}
 
 			loaded_data_internal *nr = new loaded_data_internal();
