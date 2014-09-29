@@ -5,6 +5,7 @@
 	#include <windows.h>
 #else
 	#include <cstdio>
+	#include <cstdlib>
 #endif
 
 namespace kosmos

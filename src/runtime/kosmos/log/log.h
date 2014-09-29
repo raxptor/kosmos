@@ -9,34 +9,25 @@ namespace kosmos
 	void syslog(const char *cstr); // output to console
 }
 
-#if _DEBUG || true
+#if KOSMOS_ENABLE_LOG
 
-#include <sstream>
-
-// Logging enabled.
+	#include <sstream>
+	
 	#define KOSMOS_INFO(stmt) {                          \
 		std::ostringstream __DPRINT_LINE;                  \
 		__DPRINT_LINE << __FILE__ << " (" << __LINE__ << "): " << stmt; \
 		kosmos::log(__DPRINT_LINE.str().c_str()); \
-}
+	}
 
-// Logging enabled.
 	#define KOSMOS_ERROR(stmt) {                         \
 		std::ostringstream __DPRINT_LINE;                  \
 		__DPRINT_LINE << __FILE__ << " (" << __LINE__ << "): " << stmt; \
 		kosmos::error(__DPRINT_LINE.str().c_str()); \
-}
+	}
 
 #else
 	#define KOSMOS_INFO(stmt) { }
-
-// Logging enabled.
-	#define KOSMOS_ERROR(stmt) {                         \
-		std::ostringstream __DPRINT_LINE;                  \
-		__DPRINT_LINE << __FILE__ << " (" << __LINE__ << "): " << stmt; \
-		kosmos::error(__DPRINT_LINE.str().c_str()); \
-}
-
+	#define KOSMOS_ERROR(stmt) { }
 #endif
 
 #define KOSMOS_WARNING(x) KOSMOS_INFO("warn: " << x)

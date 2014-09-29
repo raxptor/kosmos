@@ -192,13 +192,12 @@ namespace kosmos
 			// state is different but there is room
 			
 			render_block tmp;
+			tmp.state = s->state;
+			tmp.begin = rb->end;
+			tmp.end = tmp.begin + count;
 			s->blocks.push_back(tmp);
-			render_block & nb = s->blocks.back();
-			nb.state = s->state;
-			nb.begin = rb->end;
-			nb.end = nb.begin + count;
 			s->touched_state = false;
-			return nb.begin;
+			return tmp.begin;
 		}
 		
 		void set_viewport(stream *s, float width, float height)
