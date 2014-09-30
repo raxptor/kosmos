@@ -192,6 +192,8 @@ struct texbuilder : putki::builder::handler_i
 			texture->Output->Data->Config = outputFormat->StorageConfiguration;
 			texture->Output->Data->Bytes.insert(texture->Output->Data->Bytes.begin(), (unsigned char*)wb.output, (unsigned char*)(wb.output + wb.size));
 			texture->Output->Data->FileType = "png";
+
+			::free(wb.output);
 			
 			add_output(context, record, path_res.c_str(), pngObj);
 			add_output(context, record, path_res_data.c_str(), texture->Output->Data);
