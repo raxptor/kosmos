@@ -16,9 +16,16 @@ FragmentShader : Shader
 
 }
 
+ShaderProgramText
+{
+	@inline-editor Text
+	string data
+}
+
 ShaderProgram
 {
 	ptr VertexShader VertexShader
 	ptr FragmentShader FragmentShader
+	ShaderProgramText VertexText
+	ShaderProgramText FragmentText
 }
-

@@ -91,11 +91,14 @@ namespace kosmos
 		
 		void submit_block(stream *s, render_block *block)
 		{
+			state_buf *state = &block->state;
+
+			if (LIVEUPDATE_ISNULL(state->prog))
+				return;
+
 			float mtx[16] = {0};
 			mtx[0] = mtx[5] = mtx[10] = mtx[15] = 1.0f;
-			
-			state_buf *state = &block->state;
-			
+
 			mtx[0] = (2.0f / state->width) * state->xs;
 			mtx[5] = -(2.0f / state->height) * state->ys;
 			

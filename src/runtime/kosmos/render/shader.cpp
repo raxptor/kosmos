@@ -1,10 +1,11 @@
+
+#include <putki/liveupdate/liveupdate.h>
+#include <outki/types/kosmos/Shader.h>
+
+#include "log/log.h"
 #include "shader.h"
 
-#include <outki/types/kosmos/Shader.h>
-#include "log/log.h"
-
 #include <map>
-
 #include <OpenGL/gl.h>
 
 
@@ -25,9 +26,16 @@ namespace kosmos
 		
 		bool get_compiled_shader(outki::Shader *shader, GLuint type, GLuint *out)
 		{
+			LIVE_UPDATE(&shader);
 			ShaderMap::iterator i = sh_cache.find(shader);
 			if (i != sh_cache.end())
 			{
+				if (LIVE_UPDATE(&shader->Data))
+				{
+					sh_cache.erase(i);
+					return get_compiled_shader(shader, type, out);
+				}
+
 				*out = i->second;
 				return true;
 			}
@@ -41,7 +49,7 @@ namespace kosmos
 			if (success == GL_FALSE)
 			{
 				KOSMOS_WARNING(shader->Data);
-				KOSMOS_ERROR("Compilation of shader failed")
+				KOSMOS_WARNING("Compilation of shader failed")
 				return false;
 			}
 			else
@@ -56,6 +64,7 @@ namespace kosmos
 	
 		bool get_program(outki::ShaderProgram *prog, GLuint *out)
 		{
+			LIVE_UPDATE(&prog);
 			ShaderProgramMap::iterator i = prog_cache.find(prog);
 			if (i != prog_cache.end())
 			{
@@ -66,9 +75,16 @@ namespace kosmos
 			GLuint vsh, fsh;
 			
 			if (!get_compiled_shader(prog->VertexShader->up_cast<outki::Shader>(), GL_VERTEX_SHADER, &vsh))
-				KOSMOS_ERROR("Shader program has no valid vertex shader")
+			{
+				KOSMOS_WARNING("Shader program has no valid vertex shader")
+				return false;
+			}
+
 			if (!get_compiled_shader(prog->FragmentShader->up_cast<outki::Shader>(), GL_FRAGMENT_SHADER, &fsh))
-				KOSMOS_ERROR("Shader program has no valid vertex shader")
+			{
+				KOSMOS_WARNING("Shader program has no valid vertex shader")
+				return false;
+			}
 			
 			GLuint prg = glCreateProgram();
 			glAttachShader(prg, fsh);
@@ -110,6 +126,14 @@ namespace kosmos
 		
 		void program_use(program *p)
 		{
+			if (LIVEUPDATE_ISNULL(p))
+				return;
+
+			if (!p)
+			{
+				KOSMOS_ERROR("Program is null!");
+			}
+
 			glUseProgram(p->glprog);
 		}
 		
