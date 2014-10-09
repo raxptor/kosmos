@@ -9,7 +9,7 @@ function kosmos_use_runtime_lib()
 			defines {"GLEW_STATIC"}
 	        includedirs { KOSMOSPATH .. "/prebuilt/glew-1.11.0/include" }
 		   	links (KOSMOSPATH .. "/prebuilt/glew-1.11.0/lib/Release/x64/glew32s" )
-			links {"OpenGL32", "GLaux"}
+			links {"OpenGL32"}
        	configuration {}
 end
 
