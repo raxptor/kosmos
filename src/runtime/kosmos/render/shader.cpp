@@ -4,9 +4,9 @@
 
 #include "log/log.h"
 #include "shader.h"
+#include "glwrap/gl.h"
 
 #include <map>
-#include <OpenGL/gl.h>
 
 
 namespace kosmos

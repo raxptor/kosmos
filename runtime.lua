@@ -21,4 +21,13 @@ project "kosmos-runtime"
         
         putki_use_runtime_lib()
         putki_typedefs_runtime("src/types", true)
+        
+        configuration { "windows" }
+        	-- fun fun
+        	includedirs { "prebuilt/glew-1.11.0/include" }
+        	libdirs { "prebuilt/glew-1.11.0/lib/Release/x64" }
+       	
+        configuration {}
+        
+        
 
