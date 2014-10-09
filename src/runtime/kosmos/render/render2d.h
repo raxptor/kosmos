@@ -23,7 +23,7 @@ namespace kosmos
 		void gradient_rect(stream *s, float x0, float y0, float x1, float y1, unsigned int tl, unsigned int tr, unsigned int bl, unsigned int br);
 		void solid_line(stream *s, float x0, float y0, float x1, float y1, unsigned int color);
 
-		float screen_to_local(stream *s, float x, float y, float *xout, float *yout);
+		void screen_to_local(stream *s, float x, float y, float *xout, float *yout);
 
 	
 	}

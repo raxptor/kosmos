@@ -5,9 +5,11 @@ function kosmos_use_runtime_lib()
         putki_typedefs_runtime("src/types", false, KOSMOSPATH)
         includedirs ( KOSMOSRT_INCLUDES )
         links {"kosmos-runtime"}
-        configuration { "windows " }
+        configuration "windows"
+			defines {"GLEW_STATIC"}
 	        includedirs { KOSMOSPATH .. "/prebuilt/glew-1.11.0/include" }
-       		libdirs { KOSMOSPATH .. "/prebuilt/glew-1.11.0/lib/Release/x64" }
+		   	links (KOSMOSPATH .. "/prebuilt/glew-1.11.0/lib/Release/x64/glew32s" )
+			links {"OpenGL32", "GLaux"}
        	configuration {}
 end
 
@@ -25,13 +27,11 @@ project "kosmos-runtime"
         
         putki_use_runtime_lib()
         putki_typedefs_runtime("src/types", true)
-        
-        configuration { "windows" }
-        	-- fun fun
-        	includedirs { "prebuilt/glew-1.11.0/include" }
-        	libdirs { KOSMOSPATH .. "prebuilt/glew-1.11.0/lib/Release/x64" }
-       	
+
+		configuration "windows"
+			defines {"GLEW_STATIC"}
+	       	includedirs { KOSMOSPATH .. "/prebuilt/glew-1.11.0/include" }
         configuration {}
-        
+
         
 
