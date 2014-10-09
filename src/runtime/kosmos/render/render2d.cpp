@@ -8,7 +8,7 @@
 #include "render/shader.h"
 #include "render/render.h"
 
-#include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <map>
 #include <string>
