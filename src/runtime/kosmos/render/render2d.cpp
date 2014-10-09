@@ -3,8 +3,8 @@
 
 #include <putki/liveupdate/liveupdate.h>
 #include <outki/types/kosmos/Texture.h>
-#include <OpenGL/gl.h>
 
+#include "glwrap/gl.h"
 #include "render/shader.h"
 #include "render/render.h"
 
