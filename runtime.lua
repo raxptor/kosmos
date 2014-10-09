@@ -5,6 +5,8 @@ function kosmos_use_runtime_lib()
         putki_typedefs_runtime("src/types", false, KOSMOSPATH)
         includedirs ( KOSMOSRT_INCLUDES )
         links {"kosmos-runtime"}
+        includedirs { "prebuilt/glew-1.11.0/include" }
+        libdirs { "prebuilt/glew-1.11.0/lib/Release/x64" }
 end
 
 
