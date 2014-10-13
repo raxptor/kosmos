@@ -15,7 +15,7 @@
 #include <iostream>
 
 namespace {
-	const char *builder_version = "texture-builder-2";
+	const char *builder_version = "texture-builder-3";
 }
 
 struct texbuilder : putki::builder::handler_i
@@ -243,7 +243,7 @@ struct texbuilder : putki::builder::handler_i
 			texture->Output = &jpgObj->parent;
 			texture->Output->Data = inki::DataContainer::alloc();
 			texture->Output->Data->Config = outputFormat->StorageConfiguration;
-			texture->Output->Data->Bytes.insert(texture->Output->Data->Bytes.begin(), (unsigned char*)outData, (unsigned char*)(outData + buf_size));
+			texture->Output->Data->Bytes.insert(texture->Output->Data->Bytes.begin(), (unsigned char*)databuffer, (unsigned char*)(databuffer + buf_size));
 			texture->Output->Data->FileType = "jpeg";
 			
 			add_output(context, record, path_res.c_str(), jpgObj);
