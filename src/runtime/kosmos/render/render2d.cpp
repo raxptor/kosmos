@@ -102,8 +102,8 @@ namespace kosmos
 			mtx[0] = (2.0f / state->width) * state->xs;
 			mtx[5] = -(2.0f / state->height) * state->ys;
 			
-			mtx[12] = -1.0f + (state->xofs * mtx[0]);
-			mtx[13] = 1 + (state->yofs * mtx[5]);
+			mtx[12] = -1.0f + (state->xofs * mtx[0]);// + 1.0f / state->width;
+			mtx[13] = 1 + (state->yofs * mtx[5]);// + 1.0f / state->height;
 			
 			shader::program_use(state->prog);
 			

@@ -27,6 +27,7 @@ namespace kosmos
 			GLuint handle;
 			std::string source;
 			int refcount;
+			bool dynamic;
 		};
 
 		typedef std::map<std::string, texture_ref*> LoadedTextures;
@@ -72,6 +73,9 @@ namespace kosmos
 
 		void update_texture(texture_ref *tex)
 		{
+			if (tex->dynamic)
+				return;
+
 			if (LIVEUPDATE_ISNULL(tex->container))
 			{
 				empty_texture(tex->handle);
@@ -108,8 +112,8 @@ namespace kosmos
 						glBindTexture(GL_TEXTURE_2D, tex->handle);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR  );
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->source_tex->Width, tex->source_tex->Height,
 							      0, GL_RGBA, GL_UNSIGNED_BYTE, loaded->data);
 						KOSMOS_INFO("Updated texture [" << tex->handle << "] with " << loaded->size << " bytes");
@@ -134,6 +138,7 @@ namespace kosmos
 			tex->container = 0;
 			tex->source_tex = 0;
 			tex->handle = handle;
+			tex->dynamic = true;
 			return tex;
 		}
 
@@ -159,39 +164,13 @@ namespace kosmos
 			tex->source = texture->id;
 			tex->container = texture->Output->Data;
 			tex->source_tex = texture;
+			tex->dynamic = false;
 			glGenTextures(1, &tex->handle);
 
 			s_textures.insert(LoadedTextures::value_type(texture->id, tex));
 
 			update_texture(tex);
 			return tex;
-		}
-		
-		void reset_matrices_ortho(int width, int height)
-		{
-			/*
-			glMatrixMode( GL_MODELVIEW );
-			glLoadIdentity();
-			glMatrixMode( GL_PROJECTION );
-			glLoadIdentity();
-			glOrtho(0, (float)width, (float)height, 0, -1, 1);
-			*/
-		}
-
-		void transform_2d(float scalex, float scaley, float ofsx, float ofsy)
-		{
-		//	glScalef(scalex, scaley, 1);
-		//	glTranslatef(ofsx, ofsy, 0);
-		}
-
-		void push_matrix()
-		{
-		//	glPushMatrix();
-		}
-		
-		void pop_matrix()
-		{
-		//	glPopMatrix();
 		}
 
 		void begin(int width, int height, bool clearcolor, bool cleardepth, unsigned int clear_color)
