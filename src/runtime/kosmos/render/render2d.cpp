@@ -31,7 +31,7 @@ namespace kosmos
 			float xs, ys;
 			float xofs, yofs;
 			GLuint primitive;
-			render::loaded_texture *tex0;
+			render::texture_ref *tex0;
 			shader::program *prog;
 		};
 		
@@ -278,7 +278,7 @@ namespace kosmos
 			out[5].color = br;
 		}
 		
-		void tex_rect(stream *s, render::loaded_texture *tex, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, unsigned int color)
+		void tex_rect(stream *s, render::texture_ref *tex, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, unsigned int color)
 		{
 			SET_STATE(s, prog, s->prog_textured)
 			SET_STATE(s, tex0, tex)

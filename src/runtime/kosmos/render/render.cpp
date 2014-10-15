@@ -20,7 +20,7 @@ namespace kosmos
 			*x1 = *y1 = 100;
 		}
 		
-		struct loaded_texture
+		struct texture_ref
 		{
 			outki::DataContainer *container;
 			outki::Texture *source_tex;
@@ -29,14 +29,14 @@ namespace kosmos
 			int refcount;
 		};
 
-		typedef std::map<std::string, loaded_texture*> LoadedTextures;
+		typedef std::map<std::string, texture_ref*> LoadedTextures;
 
 		namespace
 		{
 			LoadedTextures s_textures;
 		};
 
-		void unload_texture(loaded_texture *tex)
+		void unload_texture(texture_ref *tex)
 		{
 			if (tex->refcount-- == 0)
 			{
@@ -70,7 +70,7 @@ namespace kosmos
 			return of->FilePath;
 		}
 
-		void update_texture(loaded_texture *tex)
+		void update_texture(texture_ref *tex)
 		{
 			if (LIVEUPDATE_ISNULL(tex->container))
 			{
@@ -127,8 +127,17 @@ namespace kosmos
 			datacontainer::release(loaded);
 		}
 
+		texture_ref * make_ref(int handle)
+		{
+			texture_ref *tex = new texture_ref();
+			tex->refcount = 1;
+			tex->container = 0;
+			tex->source_tex = 0;
+			tex->handle = handle;
+			return tex;
+		}
 
-		loaded_texture * load_texture(outki::Texture *texture)
+		texture_ref * load_texture(outki::Texture *texture)
 		{
 			LoadedTextures::iterator i = s_textures.find(texture->id);
 			if (i != s_textures.end())
@@ -145,7 +154,7 @@ namespace kosmos
 				return 0;
 			}
 
-			loaded_texture *tex = new loaded_texture();
+			texture_ref *tex = new texture_ref();
 			tex->refcount = 1;
 			tex->source = texture->id;
 			tex->container = texture->Output->Data;
@@ -262,7 +271,7 @@ namespace kosmos
 			glEnd();
 		}
 
-		int tex_id(loaded_texture *tex)
+		int tex_id(texture_ref *tex)
 		{
 			return tex->handle;
 		}

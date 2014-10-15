@@ -8,11 +8,19 @@ namespace kosmos
 	namespace render
 	{
 		// Texture handling.
-		struct loaded_texture;
-		
-		loaded_texture * load_texture(outki::Texture *texture);
-		void unload_texture(loaded_texture *tex);
-		int tex_id(loaded_texture *tex);
+		struct texture_ref;
+
+		// load texture bundled with kosmos data, might return existing instance
+		// with bumped refcount.
+		texture_ref * load_texture(outki::Texture *texture);
+
+		// handle an opengl texture for us
+		texture_ref * make_ref(int handle);
+
+		int tex_id(texture_ref *);
+
+		// free resources. (decrease refcount)
+		void unload_texture(texture_ref *tex);
 
 		// convenience function to return the textures output file path, if
 		// actually exists.
