@@ -288,6 +288,8 @@ struct atlasbuilder : putki::builder::handler_i
 
 			std::string output_atlas_path = str.str() + "_atlas.png";
 			output_atlas_path = ccgui::pngutil::write_to_temp(builder, output_atlas_path.c_str(), outBmp, out_width, out_height);
+			putki::builder::touched_temp_resource(builder, output_atlas_path.c_str());
+			
 
 			{
 				std::string outpath = str.str();
