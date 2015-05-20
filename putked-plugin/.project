@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>kosmos-java-putked</name>
+	<name>kosmos-putked-plugin</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -10,21 +10,20 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.xtext.ui.shared.xtextBuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>org.eclipse.xtext.ui.shared.xtextNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
 	<linkedResources>
 		<link>
-			<name>_gen_java</name>
+			<name>java</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/_gen/java</locationURI>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/_gen/java</locationURI>
+		</link>
+		<link>
+			<name>src/inki</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/_gen/java/inki</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
