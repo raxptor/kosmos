@@ -1,3 +1,5 @@
+package kosmos;
+
 import inki.Kosmos;
 
 import java.io.*;

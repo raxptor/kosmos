@@ -1,7 +1,9 @@
+package kosmos;
+
 import inki.Kosmos;
 import putked.*;
 
-public class KosmosPlugin implements putked.EditorPluginDescription
+public class EditorPlugin implements putked.EditorPluginDescription
 {
 	@Override
 	public String getName() { return "KosmosPlugin"; }
