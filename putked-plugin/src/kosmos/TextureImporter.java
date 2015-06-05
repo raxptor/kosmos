@@ -39,8 +39,8 @@ public class TextureImporter implements DataImporter
 			
 			if (q.accepted)
 			{
-				if (false) // TODO: Fix && Interop.writeResFile(selectedFile, q.proposedResPath))
-				{
+				try {
+					Interop.writeResFile(selectedFile, q.proposedResPath);
 					Interop.Type t = Kosmos.Texture._getType();
 					Kosmos.Texture tex = (Kosmos.Texture) DataHelper.createPutkEdObj(t.createInstance(q.proposedPath));
 					tex.setSource(q.proposedResPath);
@@ -48,9 +48,10 @@ public class TextureImporter implements DataImporter
 					System.out.println("Import successful");
 					putked.Main.s_instance.startEditing(tex.m_mi.getPath());
 					return true;
+				} catch (IOException e) {
+					System.out.println("Failed to write res file!");
+					return false;
 				}
-				System.out.println("Selected [" + selectedFile.getAbsolutePath() + "]");
-				System.out.println("(" + q.proposedPath + ") and (" + q.proposedResPath + ")");
 			}
 		}
 		return false;

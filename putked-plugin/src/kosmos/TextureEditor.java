@@ -1,11 +1,6 @@
 package kosmos;
 
-import java.beans.PropertyEditor;
-
-import javax.swing.GroupLayout.Alignment;
-
 import inki.Kosmos;
-import inki.Kosmos.Texture;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -75,8 +70,6 @@ public class TextureEditor implements Editor
 				
 						gc.setFill(Color.BLUE);
 						gc.drawImage(teximg, 0, 0);
-						
-						putked.PropertyEditor pe = new putked.PropertyEditor();
 						
 						Label label = new Label();
 						label.setText((int)teximg.getWidth() + "x" + (int)teximg.getHeight());

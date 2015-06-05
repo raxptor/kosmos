@@ -18,7 +18,7 @@ FragmentShader : Shader
 
 ShaderProgramText
 {
-	@inline-editor Text
+	@inline-editor code
 	string data
 }
 
