@@ -9,7 +9,10 @@ namespace kosmos
 	void mat4_rot_x(float *dst, float r);
 	void mat4_rot_y(float *dst, float r);
 	void mat4_rot_z(float *dst, float r);
-	void mat4_mul(float *dst, const float *left, const float *right);
 	void mat4_persp(float *dst, float w, float h, float zn, float zf);
-	void mat4_vec4_mul(float *dst_vec, const float *src_mat, const float *src_vec);
+
+	void mul_mat4(float *dst, const float *left, const float *right);
+	void mul_mat4(float *dst, const float *m0, const float *m1, const float *m2);
+
+	void mul_mat4_vec4(float *dst_vec, const float *src_mat, const float *src_vec);
 }
