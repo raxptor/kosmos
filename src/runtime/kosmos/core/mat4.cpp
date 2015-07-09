@@ -2,11 +2,11 @@
 
 namespace kosmos
 {
-	#define MTX_SET_COL(r, dst, x, y, z, w) \
-		dst[4*r] = x; \
-		dst[4*r+1] = y; \
-		dst[4*r+2] = z; \
-		dst[4*r+3] = w; \
+	#define MTX_SET_COL(c, dst, x, y, z, w) \
+		dst[4*c] = x; \
+		dst[4*c+1] = y; \
+		dst[4*c+2] = z; \
+		dst[4*c+3] = w; \
 
 	#define MTX_SET_ROW(r, dst, x, y, z, w) \
 		dst[r] = x; \
@@ -36,7 +36,7 @@ namespace kosmos
 		dst[5] = 1.0f / h;
 		dst[10] = 2.0f / (zf - zn);
 		dst[11] = -1;
-		dst[15] = (zf + zn) / (zf - zn);
+		dst[14] = (zf + zn) / (zf - zn);
 	}
 
 	void mat4_zero(float *dst)
