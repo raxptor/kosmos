@@ -34,9 +34,9 @@ namespace kosmos
 		}
 		dst[0] = 1.0f / w;
 		dst[5] = 1.0f / h;
-		dst[10] = 2.0f / (zf - zn);
+		dst[10] = (zf + zn) / (zn - zf);
 		dst[11] = -1;
-		dst[14] = (zf + zn) / (zf - zn);
+		dst[14] = 2.0f * (zf * zn) / (zn - zf);
 	}
 
 	void mat4_zero(float *dst)
