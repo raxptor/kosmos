@@ -4,6 +4,7 @@ namespace kosmos
 {
 	// all these are for 16 floats
 	void mat4_id(float *dest);
+	void mat4_zero(float *dest);
 	void mat4_trans(float *dst, float x, float y, float z);
 	void mat4_scale(float *dst, float x, float y, float z);
 	void mat4_rot_x(float *dst, float r);

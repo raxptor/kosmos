@@ -55,6 +55,14 @@ namespace kosmos
 		MTX_SET_COL(3, dst, 0, 0, 0, 1);
 	}
 
+	void mat4_scale(float *dst, float x, float y, float z)
+	{
+		MTX_SET_COL(0, dst, x, 0, 0, 0);
+		MTX_SET_COL(1, dst, 0, y, 0, 0);
+		MTX_SET_COL(2, dst, 0, 0, z, 0);
+		MTX_SET_COL(3, dst, 0, 0, 0, 1);
+	}
+	
 	void mat4_trans(float *dst, float x, float y, float z)
 	{
 		MTX_SET_COL(0, dst, 1, 0, 0, 0);
