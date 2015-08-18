@@ -2,6 +2,10 @@
 
 namespace kosmos
 {
+	typedef float mat4f[16];
+	typedef float vec4f[4];
+	typedef float vec3f[3];
+
 	// all these are for 16 floats
 	void mat4_id(float *dest);
 	void mat4_zero(float *dest);

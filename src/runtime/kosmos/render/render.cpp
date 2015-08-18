@@ -210,15 +210,7 @@ namespace kosmos
 			glClearColor(0, 0, 0, 0);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glDisable(GL_CULL_FACE);
-			glDisable(GL_DEPTH_TEST);
-			
-			glEnableClientState(GL_VERTEX_ARRAY);
-			
-			static GLuint VertexArrayID = -1;
-			if (VertexArrayID == -1)
-				glGenVertexArraysAPPLE(1, &VertexArrayID);
-			glBindVertexArrayAPPLE(VertexArrayID);
-
+			glDisable(GL_DEPTH_TEST);			
 		}
 
 		void end()
@@ -233,21 +225,6 @@ namespace kosmos
 			*width = x1 - x0;
 			*height = y1 - y0;
 			return true;
-		}
-
-		inline void intColor(unsigned int color)
-		{
-			glColor4ub((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, (color >> 24)&0xff);
-		}
-
-		void line(float x0, float y0, float x1, float y1, unsigned int color)
-		{
-			glLineWidth(1);
-			intColor(color);
-			glBegin(GL_LINES);
-			glVertex2f(x0,y0);
-			glVertex2f(x1,y1);
-			glEnd();
 		}
 
 		int tex_id(texture_ref *tex)
