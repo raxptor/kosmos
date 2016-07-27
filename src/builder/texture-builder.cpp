@@ -10,7 +10,7 @@
 #include "kosmos-builder-utils/jpge.h"
 #include "kosmos-builder-utils/textureconfig.h"
 
-#include <inki/types/kosmos/Texture.h>
+#include <inki/types/kosmos/texture.h>
 
 #include <iostream>
 
@@ -54,27 +54,27 @@ struct texbuilder : putki::builder::handler_i
 
 	virtual bool handle(putki::builder::build_context *context, putki::builder::data *builder, putki::build_db::record *record, putki::db::data *input, const char *path, putki::instance_t obj)
 	{
-		inki::Texture *texture = (inki::Texture *) obj;
+		inki::texture *texture = (inki::texture *) obj;
 
 		// this is used for atlas lookups later.
 		texture->id = path;
 
 		// this object supplies its own defaults on initialisation
-		inki::TextureConfiguration config;
-		if (texture->Configuration)
+		inki::texture_configuration config;
+		if (texture->configuration)
 		{
-			putki::build_db::add_input_dependency(record, putki::db::pathof(input, texture->Configuration));
-			config = *texture->Configuration;
+			putki::build_db::add_input_dependency(record, putki::db::pathof(input, texture->configuration));
+			config = *texture->configuration;
 		}
 
-		putki::build_db::add_external_resource_dependency(record, texture->Source.c_str(), putki::resource::signature(builder, texture->Source.c_str()).c_str());
+		putki::build_db::add_external_resource_dependency(record, texture->source.c_str(), putki::resource::signature(builder, texture->source.c_str()).c_str());
 
 		// First load the information for the texture and fill in width & height
 		ccgui::pngutil::loaded_png pnginfo;
-		if (ccgui::pngutil::load_info(putki::resource::real_path(builder, texture->Source.c_str()).c_str(), &pnginfo))
+		if (ccgui::pngutil::load_info(putki::resource::real_path(builder, texture->source.c_str()).c_str(), &pnginfo))
 		{
-			texture->Width = texture->SourceWidth = pnginfo.width;
-			texture->Height = texture->SourceHeight = pnginfo.height;
+			texture->width = texture->source_width = pnginfo.width;
+			texture->height = texture->source_height = pnginfo.height;
 			ccgui::pngutil::free(&pnginfo);
 		}
 		else
@@ -83,7 +83,7 @@ struct texbuilder : putki::builder::handler_i
 			return false;
 		}
 
-		inki::TextureOutputFormat *outputFormat = config.OutputFormat(putki::builder::config(builder));
+		inki::texture_output_format *outputFormat = config.output_format(putki::builder::config(builder));
 
 		// If no output is needed
 		if (!outputFormat)
@@ -94,10 +94,10 @@ struct texbuilder : putki::builder::handler_i
 
 
 		int out_width, out_height;
-		resize(outputFormat->ResizeMode, pnginfo.width, pnginfo.height, &out_width, &out_height);
+		resize(outputFormat->resize_mode, pnginfo.width, pnginfo.height, &out_width, &out_height);
 
-		texture->Width = out_width;
-		texture->Height = out_height;
+		texture->width = out_width;
+		texture->height = out_height;
 
 		// note: assume uncrop
 		const float u0 = 0;
@@ -107,15 +107,15 @@ struct texbuilder : putki::builder::handler_i
 
 		// load
 		ccgui::pngutil::loaded_png png;
-		if (!ccgui::pngutil::load(putki::resource::real_path(builder, texture->Source.c_str()).c_str(), &png))
+		if (!ccgui::pngutil::load(putki::resource::real_path(builder, texture->source.c_str()).c_str(), &png))
 		{
 			RECORD_WARNING(record, "Failed to load source file!");
 			return false;
 		}
 		
-		if (outputFormat->PremultiplyAlpha)
+		if (outputFormat->premultiply_alpha)
 		{
-			for (int i=0;i<png.width*png.height;i++)
+			for (size_t i=0;i<png.width*png.height;i++)
 			{
 				unsigned char *ptr = (unsigned char*)&png.pixels[i];
 				ptr[0] = ptr[0] * ptr[3] / 255;
@@ -151,14 +151,14 @@ struct texbuilder : putki::builder::handler_i
 		path_res.append("_out");
 		std::string path_res_data(path_res + "_data");
 
-		if (outputFormat->rtti_type_ref() == inki::TextureOutputFormatRaw::type_id())
+		if (outputFormat->rtti_type_ref() == inki::texture_output_format_raw::type_id())
 		{
-			inki::TextureOutputRaw *rawTex = inki::TextureOutputRaw::alloc();
+			inki::texture_output_raw *raw_tex = inki::texture_output_raw::alloc();
 			
-			texture->Output = &rawTex->parent;
-			texture->Output->Data = inki::DataContainer::alloc();
-			texture->Output->Data->Config = outputFormat->StorageConfiguration;
-			std::vector<unsigned char> & bytesOut = texture->Output->Data->Bytes;
+			texture->output = raw_tex;
+			texture->output->data = inki::data_container::alloc();
+			texture->output->data->config = outputFormat->storage_configuration;
+			std::vector<unsigned char> & bytesOut = texture->output->data->bytes;
 
 			// RGBA
 			for (int i=0;i<out_width * png.height;i++)
@@ -170,44 +170,42 @@ struct texbuilder : putki::builder::handler_i
 				bytesOut.push_back((outData[i] >> 24) & 0xff);
 			}
 			
-			add_output(context, record, path_res.c_str(), rawTex);
-			add_output(context, record, path_res_data.c_str(), texture->Output->Data);
+			add_output(context, record, path_res.c_str(), raw_tex);
+			add_output(context, record, path_res_data.c_str(), raw_tex->data);
 		}
-		else if (outputFormat->rtti_type_ref() == inki::TextureOutputFormatPng::type_id())
+		else if (outputFormat->rtti_type_ref() == inki::texture_output_format_png::type_id())
 		{
 			// these are the direct load textures.
-			inki::TextureOutputPng *pngObj = inki::TextureOutputPng::alloc();
-			pngObj->parent.u0 = u0;
-			pngObj->parent.v0 = v0;
-			pngObj->parent.u1 = u1;
-			pngObj->parent.v1 = v1;
+			inki::texture_output_png *pngObj = inki::texture_output_png::alloc();
+			pngObj->u0 = u0;
+			pngObj->v0 = v0;
+			pngObj->u1 = u1;
+			pngObj->v1 = v1;
 			
-			RECORD_INFO(record, "[TextureOutputFormatPng] - Source image [" << png.width << "x" << png.height << "] => [" << texture->Width << "x" << texture->Height << "]")
+			RECORD_INFO(record, "[TextureOutputFormatPng] - Source image [" << png.width << "x" << png.height << "] => [" << texture->width << "x" << texture->height << "]")
 			
-			ccgui::pngutil::write_buffer wb = ccgui::pngutil::write_to_mem(outData, out_width, out_height, ((inki::TextureOutputFormatPng*)outputFormat)->CompressionLevel);
+			ccgui::pngutil::write_buffer wb = ccgui::pngutil::write_to_mem(outData, out_width, out_height, ((inki::texture_output_format_png*)outputFormat)->compression_level);
 			
-			texture->Output = &pngObj->parent;
-			
-			texture->Output->Data = inki::DataContainer::alloc();
-			texture->Output->Data->Config = outputFormat->StorageConfiguration;
-			texture->Output->Data->Bytes.insert(texture->Output->Data->Bytes.begin(), (unsigned char*)wb.output, (unsigned char*)(wb.output + wb.size));
-			texture->Output->Data->FileType = "png";
+			texture->output = pngObj;
+			texture->output->data = inki::data_container::alloc();
+			texture->output->data->config = outputFormat->storage_configuration;
+			texture->output->data->bytes.insert(texture->output->data->bytes.begin(), (unsigned char*)wb.output, (unsigned char*)(wb.output + wb.size));
+			texture->output->data->file_type = "png";
 
 			::free(wb.output);
 			
 			add_output(context, record, path_res.c_str(), pngObj);
-			add_output(context, record, path_res_data.c_str(), texture->Output->Data);
+			add_output(context, record, path_res_data.c_str(), texture->output->data);
 		}
-		else if (outputFormat->rtti_type_ref() == inki::TextureOutputFormatJpeg::type_id())
+		else if (outputFormat->rtti_type_ref() == inki::texture_output_format_jpeg::type_id())
 		{
 			// these are the direct load textures.
-			inki::TextureOutputJpeg *jpgObj = inki::TextureOutputJpeg::alloc();
-			jpgObj->parent.u0 = u0;
-			jpgObj->parent.v0 = v0;
-			jpgObj->parent.u1 = u1;
-			jpgObj->parent.v1 = v1;
-
-			texture->Output = &jpgObj->parent;
+			inki::texture_output_jpeg *jpgObj = inki::texture_output_jpeg::alloc();
+			jpgObj->u0 = u0;
+			jpgObj->v0 = v0;
+			jpgObj->u1 = u1;
+			jpgObj->v1 = v1;
+			texture->output = jpgObj;
 
 			int buf_size = 4*1024*1024;
 			char *databuffer = new char[buf_size];
@@ -228,10 +226,10 @@ struct texbuilder : putki::builder::handler_i
 				pngpixels += 4;
 			}
 
-			inki::TextureOutputFormatJpeg *fmt = (inki::TextureOutputFormatJpeg *) outputFormat;
+			inki::texture_output_format_jpeg *fmt = (inki::texture_output_format_jpeg *) outputFormat;
 			jpge::params p;
-			p.m_quality = fmt->Quality;
-			p.m_two_pass_flag = fmt->Twopass;
+			p.m_quality = fmt->quality;
+			p.m_two_pass_flag = fmt->twopass;
 
 			if (!jpge::compress_image_to_jpeg_file_in_memory(databuffer, buf_size, out_width, out_height, 4, (unsigned char*)outData, p))
 			{
@@ -240,14 +238,14 @@ struct texbuilder : putki::builder::handler_i
 			}
 			RECORD_INFO(record, "[jpeg] compressed " << out_width << "x" << out_height << " to " << buf_size << " bytes.")
 			
-			texture->Output = &jpgObj->parent;
-			texture->Output->Data = inki::DataContainer::alloc();
-			texture->Output->Data->Config = outputFormat->StorageConfiguration;
-			texture->Output->Data->Bytes.insert(texture->Output->Data->Bytes.begin(), (unsigned char*)databuffer, (unsigned char*)(databuffer + buf_size));
-			texture->Output->Data->FileType = "jpeg";
+			texture->output = jpgObj;
+			texture->output->data = inki::data_container::alloc();
+			texture->output->data->config = outputFormat->storage_configuration;
+			texture->output->data->bytes.insert(texture->output->data->bytes.begin(), (unsigned char*)databuffer, (unsigned char*)(databuffer + buf_size));
+			texture->output->data->file_type = "jpeg";
 			
 			add_output(context, record, path_res.c_str(), jpgObj);
-			add_output(context, record, path_res_data.c_str(), texture->Output->Data);
+			add_output(context, record, path_res_data.c_str(), texture->output->data);
 		
 			delete [] databuffer;
 		}

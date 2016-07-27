@@ -21,28 +21,28 @@ struct vertexshader : putki::builder::handler_i
 
 	virtual bool handle(putki::builder::build_context *context, putki::builder::data *builder, putki::build_db::record *record, putki::db::data *input, const char *path, putki::instance_t obj)
 	{
-		inki::Shader *shader = (inki::Shader *)obj;
+		inki::shader *shader = (inki::shader *)obj;
 
-		if (!shader->Data.empty())
+		if (!shader->data.empty())
 		{
-			if (!shader->SourceFile.empty())
+			if (!shader->source_file.empty())
 			{
 				RECORD_WARNING(record, "Ignoring SourceFile because there is data in the shader already");
 			}
 			return false;	
 		}
 
-		putki::build_db::add_external_resource_dependency(record, shader->SourceFile.c_str(), putki::resource::signature(builder, shader->SourceFile.c_str()).c_str());
+		putki::build_db::add_external_resource_dependency(record, shader->source_file.c_str(), putki::resource::signature(builder, shader->source_file.c_str()).c_str());
 
 		const char *bytes;
 		long long size;
-		if (!putki::resource::load(builder, shader->SourceFile.c_str(), &bytes, &size))
+		if (!putki::resource::load(builder, shader->source_file.c_str(), &bytes, &size))
 		{
-			RECORD_ERROR(record, "Failed to read [" << shader->SourceFile << "]!");
+			RECORD_ERROR(record, "Failed to read [" << shader->source_file << "]!");
 		}
 
-		shader->Data.insert(shader->Data.begin(), bytes, bytes + size);
-		RECORD_INFO(record, "Shader is " << shader->Data.size() << " bytes");
+		shader->data.insert(shader->data.begin(), bytes, bytes + size);
+		RECORD_INFO(record, "Shader is " << shader->data.size() << " bytes");
 		
 		putki::resource::free(bytes);
 		return false;
@@ -57,36 +57,36 @@ struct shaderprogram : putki::builder::handler_i
 
 	virtual bool handle(putki::builder::build_context *context, putki::builder::data *builder, putki::build_db::record *record, putki::db::data *input, const char *path, putki::instance_t obj)
 	{
-		inki::ShaderProgram *shader = (inki::ShaderProgram *)obj;
+		inki::shader_program *shader = (inki::shader_program *)obj;
 
-		if (!shader->VertexText.data.empty())
+		if (!shader->vertex_text.data.empty())
 		{
-			if (shader->VertexShader)
+			if (shader->vertex_shader)
 				RECORD_WARNING(record, "Replaced vertex shader pointer with supplied text");
 
-			inki::VertexShader *shdr = inki::VertexShader::alloc();
-			shdr->parent.Data.insert(shdr->parent.Data.begin(), shader->VertexText.data.begin(), shader->VertexText.data.end());
+			inki::vertex_shader *shdr = inki::vertex_shader::alloc();
+			shdr->data.insert(shdr->data.begin(), shader->vertex_text.data.begin(), shader->vertex_text.data.end());
 
 			std::string pth(path);
 			pth.append("_vert");
 
-			shader->VertexShader = shdr;
+			shader->vertex_shader = shdr;
 			add_output(context, record, pth.c_str(), shdr);
 
 		}
 
-		if (!shader->FragmentText.data.empty())
+		if (!shader->fragment_text.data.empty())
 		{
-			if (shader->FragmentShader)
+			if (shader->fragment_shader)
 				RECORD_WARNING(record, "Replaced fragment shader pointer with supplied text");
 
-			inki::FragmentShader *shdr = inki::FragmentShader::alloc();
-			shdr->parent.Data.insert(shdr->parent.Data.begin(), shader->FragmentText.data.begin(), shader->FragmentText.data.end());
+			inki::fragment_shader *shdr = inki::fragment_shader::alloc();
+			shdr->data.insert(shdr->data.begin(), shader->fragment_text.data.begin(), shader->fragment_text.data.end());
 
 			std::string pth(path);
 			pth.append("_frag");
 
-			shader->FragmentShader = shdr;
+			shader->fragment_shader = shdr;
 			add_output(context, record, pth.c_str(), shdr);
 		}
 

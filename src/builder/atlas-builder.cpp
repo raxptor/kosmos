@@ -120,7 +120,7 @@ struct atlasbuilder : putki::builder::handler_i
 
 	virtual bool handle(putki::builder::build_context *context, putki::builder::data *builder, putki::build_db::record *record, putki::db::data *input, const char *path, putki::instance_t obj)
 	{
-		inki::Atlas *atlas = (inki::Atlas *) obj;
+		inki::atlas *atlas = (inki::atlas *) obj;
 
 		std::vector<ccgui::pngutil::loaded_png> loaded;
 		std::vector<rbp::InputRect> inputRects;
@@ -132,28 +132,28 @@ struct atlasbuilder : putki::builder::handler_i
 
 		int border = 2;
 
-		if (atlas->Inputs.size() == 1)
+		if (atlas->inputs.size() == 1)
 		{
 			border = 0;
 		}
 
-		for (unsigned int i=0;i<atlas->Inputs.size();i++)
+		for (unsigned int i=0;i<atlas->inputs.size();i++)
 		{
-			if (!atlas->Inputs[i])
+			if (!atlas->inputs[i])
 			{
 				RECORD_WARNING(record, "Blank entry in atlas at slot " << i)
 				continue;
 			}
 
 			ccgui::pngutil::loaded_png png;
-			if (!ccgui::pngutil::load(putki::resource::real_path(builder, atlas->Inputs[i]->Source.c_str()).c_str(), &png))
+			if (!ccgui::pngutil::load(putki::resource::real_path(builder, atlas->inputs[i]->source.c_str()).c_str(), &png))
 			{
 				RECORD_WARNING(record, "Failed to load png");
 			}
 			else
 			{
-				const char *path = atlas->Inputs[i]->Source.c_str();
-				const char *obj_path = putki::db::pathof(input, atlas->Inputs[i]);
+				const char *path = atlas->inputs[i]->source.c_str();
+				const char *obj_path = putki::db::pathof(input, atlas->inputs[i]);
 				if (obj_path)
 				{
 					putki::build_db::add_input_dependency(record, obj_path);
@@ -183,7 +183,7 @@ struct atlasbuilder : putki::builder::handler_i
 					max_height = ir.height;
 				}
 
-				RECORD_INFO(record, " - " << atlas->Inputs[i]->Source.c_str() << " loaded [" << png.width << "x" << png.height << "]")
+				RECORD_INFO(record, " - " << atlas->inputs[i]->source.c_str() << " loaded [" << png.width << "x" << png.height << "]")
 			}
 		}
 
@@ -251,11 +251,11 @@ struct atlasbuilder : putki::builder::handler_i
 			   }
 			 */
 
-			inki::AtlasOutput ao;
+			inki::atlas_output ao;
 
-			ao.Width = out_width;
-			ao.Height = out_height;
-			ao.Scale = g_outputTexConf[i].scale;
+			ao.width = out_width;
+			ao.height= out_height;
+			ao.scale = g_outputTexConf[i].scale;
 
 			RECORD_INFO(record, "Packing into " << out_width << "x" << out_height)
 
@@ -273,14 +273,14 @@ struct atlasbuilder : putki::builder::handler_i
 						outBmp[out_width * (out.y + y) + (out.x + x)] = sample(g.pixels, g.width, g.height, out.width - border * 2, out.height - border * 2, krn, x - border, y - border);
 				}
 
-				inki::AtlasEntry e;
-				e.id = putki::db::pathof_including_unresolved(input, atlas->Inputs[packedRects[k].id]);
+				inki::atlas_entry e;
+				e.id = putki::db::pathof_including_unresolved(input, atlas->inputs[packedRects[k].id]);
 				e.u0 = float(out.x + border) / float(out_width);
 				e.v0 = float(out.y + border) / float(out_height);
 				e.u1 = float(out.x + out.width - border) / float(out_width);
 				e.v1 = float(out.y + out.height - border) / float(out_height);
 
-				ao.Entries.push_back(e);
+				ao.entries.push_back(e);
 			}
 
 			std::stringstream str;
@@ -295,14 +295,14 @@ struct atlasbuilder : putki::builder::handler_i
 				std::string outpath = str.str();
 
 				// create new texture.
-				inki::Texture *texture = inki::Texture::alloc();
-				texture->Source = output_atlas_path;
-				texture->Configuration = atlas->OutputConfiguration;
+				inki::texture *texture = inki::texture::alloc();
+				texture->source = output_atlas_path;
+				texture->configuration = atlas->output_configuration;
 
 				add_output(context, record, outpath.c_str(), texture);
 
-				ao.Texture = texture;
-				atlas->Outputs.push_back(ao);
+				ao.texture = texture;
+				atlas->outputs.push_back(ao);
 			}
 
 			for (unsigned int i=0;i!=loaded.size();i++)
