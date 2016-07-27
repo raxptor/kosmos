@@ -22,8 +22,8 @@ namespace kosmos
 		
 		struct texture_ref
 		{
-			outki::DataContainer *container;
-			outki::Texture *source_tex;
+			outki::data_container *container;
+			outki::texture *source_tex;
 			GLuint handle;
 			std::string source;
 			int refcount;
@@ -60,15 +60,15 @@ namespace kosmos
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
-		const char *get_texture_file_path(outki::Texture *texture)
+		const char *get_texture_file_path(outki::texture *texture)
 		{
 			if (!texture) return 0;
-			if (!texture->Output) return 0;
-			if (!texture->Output->Data) return 0;
-			if (!texture->Output->Data->Output) return 0;
-			outki::DataContainerOutputFile *of = texture->Output->Data->Output->exact_cast<outki::DataContainerOutputFile>();
+			if (!texture->output) return 0;
+			if (!texture->output->data) return 0;
+			if (!texture->output->data->output) return 0;
+			outki::data_container_output_file *of = texture->output->data->output->exact_cast<outki::data_container_output_file>();
 			if (!of) return 0;
-			return of->FilePath;
+			return of->file_path;
 		}
 
 		void update_texture(texture_ref *tex)
@@ -90,7 +90,7 @@ namespace kosmos
 				return;
 			}
 
-			if (!loaded->size || !tex->source_tex->Output)
+			if (!loaded->size || !tex->source_tex->output)
 			{
 				KOSMOS_WARNING("Empty texture?!")
 				empty_texture(tex->handle);
@@ -98,13 +98,13 @@ namespace kosmos
 				return;
 			}
 
-			switch (tex->source_tex->Output->rtti_type_ref())
+			switch (tex->source_tex->output->rtti_type_id())
 			{
-				case outki::TextureOutputRaw::TYPE_ID:
+				case outki::texture_output_raw::TYPE_ID:
 				{
-					if (loaded->size != 4 * tex->source_tex->Width * tex->source_tex->Height)
+					if (loaded->size != 4 * tex->source_tex->width * tex->source_tex->height)
 					{
-						KOSMOS_WARNING("Texture is " << tex->source_tex->Width << "x" << tex->source_tex->Height << " but bytes are " << loaded->size)
+						KOSMOS_WARNING("Texture is " << tex->source_tex->width << "x" << tex->source_tex->height << " but bytes are " << loaded->size)
 						empty_texture(tex->handle);
 					}
 					else
@@ -114,7 +114,7 @@ namespace kosmos
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->source_tex->Width, tex->source_tex->Height,
+						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->source_tex->width, tex->source_tex->height,
 							      0, GL_RGBA, GL_UNSIGNED_BYTE, loaded->data);
 						KOSMOS_INFO("Updated texture [" << tex->handle << "] with " << loaded->size << " bytes");
 					}
@@ -142,7 +142,7 @@ namespace kosmos
 			return tex;
 		}
 
-		texture_ref * load_texture(outki::Texture *texture)
+		texture_ref * load_texture(outki::texture *texture)
 		{
 			LoadedTextures::iterator i = s_textures.find(texture->id);
 			if (i != s_textures.end())
@@ -153,7 +153,7 @@ namespace kosmos
 
 			LIVE_UPDATE(&texture);
 
-			if (!texture->Output)
+			if (!texture->output)
 			{
 				KOSMOS_WARNING("Trying to load a texture which has no generated output! [" << texture->id << "]");
 				return 0;
@@ -162,7 +162,7 @@ namespace kosmos
 			texture_ref *tex = new texture_ref();
 			tex->refcount = 1;
 			tex->source = texture->id;
-			tex->container = texture->Output->Data;
+			tex->container = texture->output->data;
 			tex->source_tex = texture;
 			tex->dynamic = false;
 			glGenTextures(1, &tex->handle);
@@ -182,8 +182,8 @@ namespace kosmos
 				bool upd = false;
 				if (LIVE_UPDATE(&i->second->source_tex))
 				{
-					if (i->second->source_tex->Output)
-						i->second->container = i->second->source_tex->Output->Data;
+					if (i->second->source_tex->output)
+						i->second->container = i->second->source_tex->output->data;
 					else
 						i->second->container = 0;
 					upd = true;
@@ -193,7 +193,7 @@ namespace kosmos
 				{
 					if (LIVE_UPDATE(&i->second->container))
 						upd = true;
-					if (LIVE_UPDATE(&i->second->container->Output))
+					if (LIVE_UPDATE(&i->second->container->output))
 						upd = true;
 				}
 

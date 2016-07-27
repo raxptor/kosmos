@@ -18,19 +18,19 @@ namespace kosmos
 			GLuint glprog;
 		};
 		
-		typedef std::map<outki::Shader*, GLuint> ShaderMap;
-		typedef std::map<outki::ShaderProgram*, GLuint> ShaderProgramMap;
+		typedef std::map<outki::shader*, GLuint> ShaderMap;
+		typedef std::map<outki::shader_program*, GLuint> ShaderProgramMap;
 		
 		ShaderMap sh_cache;
 		ShaderProgramMap prog_cache;
 		
-		bool get_compiled_shader(outki::Shader *shader, GLuint type, GLuint *out)
+		bool get_compiled_shader(outki::shader *shader, GLuint type, GLuint *out)
 		{
 			LIVE_UPDATE(&shader);
 			ShaderMap::iterator i = sh_cache.find(shader);
 			if (i != sh_cache.end())
 			{
-				if (LIVE_UPDATE(&shader->Data))
+				if (LIVE_UPDATE(&shader->data))
 				{
 					sh_cache.erase(i);
 					return get_compiled_shader(shader, type, out);
@@ -41,14 +41,14 @@ namespace kosmos
 			}
 				
 			GLuint sh = glCreateShader(type);
-			glShaderSource(sh, 1, &shader->Data, 0);
+			glShaderSource(sh, 1, &shader->data, 0);
 			glCompileShader(sh);
 			
 			GLint success;
 			glGetShaderiv(sh, GL_COMPILE_STATUS, &success);
 			if (success == GL_FALSE)
 			{
-				KOSMOS_WARNING(shader->Data);
+				KOSMOS_WARNING(shader->data);
 				KOSMOS_WARNING("Compilation of shader failed")
 				return false;
 			}
@@ -62,7 +62,7 @@ namespace kosmos
 			return true;
 		}
 	
-		bool get_program(outki::ShaderProgram *prog, GLuint *out)
+		bool get_program(outki::shader_program *prog, GLuint *out)
 		{
 			LIVE_UPDATE(&prog);
 			ShaderProgramMap::iterator i = prog_cache.find(prog);
@@ -74,13 +74,13 @@ namespace kosmos
 			
 			GLuint vsh, fsh;
 			
-			if (!get_compiled_shader(prog->VertexShader->up_cast<outki::Shader>(), GL_VERTEX_SHADER, &vsh))
+			if (!get_compiled_shader(prog->vertex_shader, GL_VERTEX_SHADER, &vsh))
 			{
 				KOSMOS_WARNING("Shader program has no valid vertex shader")
 				return false;
 			}
 
-			if (!get_compiled_shader(prog->FragmentShader->up_cast<outki::Shader>(), GL_FRAGMENT_SHADER, &fsh))
+			if (!get_compiled_shader(prog->fragment_shader, GL_FRAGMENT_SHADER, &fsh))
 			{
 				KOSMOS_WARNING("Shader program has no valid vertex shader")
 				return false;
@@ -107,7 +107,7 @@ namespace kosmos
 			return true;
 		}
 		
-		program *program_get(outki::ShaderProgram *prog)
+		program *program_get(outki::shader_program *prog)
 		{
 			GLuint p;
 			if (get_program(prog, &p))

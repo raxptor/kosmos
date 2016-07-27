@@ -14,7 +14,7 @@ namespace kosmos
 			size_t size;
 		};
 
-		loaded_data* load(outki::DataContainer *container, bool block_until_loaded);
+		loaded_data* load(outki::data_container *container, bool block_until_loaded);
 		void release(loaded_data *d);
 	}
 }

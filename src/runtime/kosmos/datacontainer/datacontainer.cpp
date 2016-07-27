@@ -16,20 +16,20 @@ namespace kosmos
 	{
 		struct loaded_data_internal : loaded_data
 		{
-			outki::DataContainer *source;
+			outki::data_container *source;
 			bool allocated;
 			int refcount;
 		};
 
-		typedef std::map<outki::DataContainer*, loaded_data_internal*> LoadMap;
+		typedef std::map<outki::data_container*, loaded_data_internal*> LoadMap;
 		LoadMap s_loaded;
 
-		loaded_data* load(outki::DataContainer *container, bool block_until_loaded)
+		loaded_data* load(outki::data_container *container, bool block_until_loaded)
 		{
 			LoadMap::iterator i = s_loaded.find(container);
 			if (i != s_loaded.end())
 			{
-				if (LIVE_UPDATE(&i->second->source) || (i->second->source->Output && LIVE_UPDATE(&i->second->source->Output)))
+				if (LIVE_UPDATE(&i->second->source) || (i->second->source->output && LIVE_UPDATE(&i->second->source->output)))
 				{
 					if (--i->second->refcount == 0)
 					{
@@ -52,21 +52,21 @@ namespace kosmos
 			nr->refcount = 1;
 			nr->source = container;
 
-			outki::DataContainerOutput *output = container->Output;
+			outki::data_container_output *output = container->output;
 			KOSMOS_DEBUG("Loading data container with output " << output);
 
 			if (!output)
 			{
 				KOSMOS_DEBUG("Data was embedded");
-				nr->data = container->Bytes;
-				nr->size = (size_t) container->Bytes_size;
+				nr->data = container->bytes;
+				nr->size = (size_t) container->bytes_size;
 				s_loaded.insert(LoadMap::value_type(container, nr));
 				return nr;
 			}
-			else if (outki::DataContainerOutputFile *file = output->exact_cast<outki::DataContainerOutputFile>())
+			else if (outki::data_container_output_file *file = output->exact_cast<outki::data_container_output_file >())
 			{
 				char real_path[512];
-				putki::format_file_path(file->FilePath, real_path);
+				putki::format_file_path(file->file_path, real_path);
 				KOSMOS_DEBUG("Loading file [" << real_path << "]");
 
 				std::ifstream in(real_path, std::ios::binary);

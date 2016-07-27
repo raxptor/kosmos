@@ -3,10 +3,10 @@
 
 namespace outki
 {
-	struct Shader;
-	struct VertexShader;
-	struct FragmentShader;
-	struct ShaderProgram;
+	struct shader;
+	struct vertex_shader;
+	struct fragment_shader;
+	struct shader_program;
 }
 
 namespace kosmos
@@ -15,7 +15,7 @@ namespace kosmos
 	{
 		struct program;
 	
-		program *program_get(outki::ShaderProgram *prog);
+		program *program_get(outki::shader_program *prog);
 		void program_free(program *p);
 		void program_use(program *p);
 		

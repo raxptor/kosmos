@@ -1,7 +1,7 @@
 #ifndef __CLAW_RENDER_H___
 #define __CLAW_RENDER_H___
 
-namespace outki { struct Texture; }
+namespace outki { struct texture; }
 
 namespace kosmos
 {
@@ -12,7 +12,7 @@ namespace kosmos
 
 		// load texture bundled with kosmos data, might return existing instance
 		// with bumped refcount.
-		texture_ref * load_texture(outki::Texture *texture);
+		texture_ref * load_texture(outki::texture *texture);
 
 		// handle an opengl texture for us
 		texture_ref * make_ref(int handle);
@@ -24,7 +24,7 @@ namespace kosmos
 
 		// convenience function to return the textures output file path, if
 		// actually exists.
-		const char *get_texture_file_path(outki::Texture *texture);
+		const char *get_texture_file_path(outki::texture *texture);
 	
 		// Workflow.
 		void begin(int width, int height, bool clearcolor, bool cleardepth, unsigned int clear_color);
