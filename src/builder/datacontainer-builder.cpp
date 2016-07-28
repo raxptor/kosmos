@@ -119,5 +119,5 @@ struct databuilder : putki::builder::handler_i
 void register_data_container_builder(putki::builder::data *builder)
 {
 	static databuilder fb;
-	putki::builder::add_data_builder(builder, "data_container", &fb);
+	putki::builder::add_data_builder(builder, "DataContainer", &fb);
 }

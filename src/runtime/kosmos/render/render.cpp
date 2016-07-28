@@ -207,10 +207,10 @@ namespace kosmos
 			}
 			
 			glViewport(0, 0, width, height);
-			glClearColor(0, 0, 0, 0);
+			glClearColor(1, 1, 1, 0);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glDisable(GL_CULL_FACE);
-			glDisable(GL_DEPTH_TEST);			
+			glDisable(GL_DEPTH_TEST);
 		}
 
 		void end()
