@@ -2,9 +2,7 @@
 #include <putki/builder/builder.h>
 #include <putki/builder/package.h>
 #include <putki/builder/log.h>
-#include <putki/builder/resource.h>
 #include <putki/builder/build-db.h>
-#include <putki/builder/db.h>
 
 #include "kosmos-builder-utils/pngutil.h"
 #include "kosmos-builder-utils/jpge.h"
@@ -14,11 +12,7 @@
 
 #include <iostream>
 
-namespace {
-	const char *builder_version = "texture-builder-3";
-}
-
-struct texbuilder : putki::builder::handler_i
+namespace
 {
 	static void resize(inki::TextureResizeMode mode, int width, int height, int *out_width, int *out_height)
 	{
@@ -33,7 +27,7 @@ struct texbuilder : putki::builder::handler_i
 		*out_height = 1;
 
 		while (*out_width < width) *out_width *= 2;
-		while (*out_height < height) *out_height *=2;
+		while (*out_height < height) *out_height *= 2;
 
 		if (mode == inki::RESIZE_UNCROP_POW2SQUARE)
 		{
@@ -48,50 +42,43 @@ struct texbuilder : putki::builder::handler_i
 		}
 	}
 
-	virtual const char *version() {
-		return builder_version;
-	}
 
-	virtual bool handle(putki::builder::build_context *context, putki::builder::data *builder, putki::build_db::record *record, putki::db::data *input, const char *path, putki::instance_t obj)
+	bool build_texture(const putki::builder::build_info* info)
 	{
-		inki::texture *texture = (inki::texture *) obj;
+		inki::texture *texture = (inki::texture *) info->object;
 
 		// this is used for atlas lookups later.
-		texture->id = path;
+		texture->id = info->path;
 
 		// this object supplies its own defaults on initialisation
 		inki::texture_configuration config;
-		if (texture->configuration)
+		if (texture->configuration.get())
 		{
-			putki::build_db::add_input_dependency(record, putki::db::pathof(input, texture->configuration));
 			config = *texture->configuration;
 		}
 
-		putki::build_db::add_external_resource_dependency(record, texture->source.c_str(), putki::resource::signature(builder, texture->source.c_str()).c_str());
-
 		// First load the information for the texture and fill in width & height
-		ccgui::pngutil::loaded_png pnginfo;
-		if (ccgui::pngutil::load_info(putki::resource::real_path(builder, texture->source.c_str()).c_str(), &pnginfo))
+		kosmos::pngutil::loaded_png pnginfo;
+		if (kosmos::pngutil::load_from_resource(info, texture->source.c_str(), &pnginfo))
 		{
 			texture->width = texture->source_width = pnginfo.width;
 			texture->height = texture->source_height = pnginfo.height;
-			ccgui::pngutil::free(&pnginfo);
+			kosmos::pngutil::free(&pnginfo);
 		}
 		else
 		{
-			RECORD_WARNING(record, "Could not load source file!");
+			RECORD_WARNING(info->record, "Could not load source file!");
 			return false;
 		}
 
-		inki::texture_output_format *outputFormat = config.output_format(putki::builder::config(builder));
+		const inki::texture_output_format *outputFormat = config.output_format(info->build_config).get();
 
 		// If no output is needed
 		if (!outputFormat)
 		{
-			RECORD_INFO(record, "No output format, skipping generation")
-			return false;
+			RECORD_INFO(info->record, "No output format, skipping generation")
+				return false;
 		}
-
 
 		int out_width, out_height;
 		resize(outputFormat->resize_mode, pnginfo.width, pnginfo.height, &out_width, &out_height);
@@ -105,19 +92,11 @@ struct texbuilder : putki::builder::handler_i
 		const float u1 = float(pnginfo.width) / float(out_width);
 		const float v1 = float(pnginfo.height) / float(out_height);
 
-		// load
-		ccgui::pngutil::loaded_png png;
-		if (!ccgui::pngutil::load(putki::resource::real_path(builder, texture->source.c_str()).c_str(), &png))
-		{
-			RECORD_WARNING(record, "Failed to load source file!");
-			return false;
-		}
-		
 		if (outputFormat->premultiply_alpha)
 		{
-			for (size_t i=0;i<png.width*png.height;i++)
+			for (size_t i = 0; i < pnginfo.width*pnginfo.height; i++)
 			{
-				unsigned char *ptr = (unsigned char*)&png.pixels[i];
+				unsigned char *ptr = (unsigned char*)&pnginfo.pixels[i];
 				ptr[0] = ptr[0] * ptr[3] / 255;
 				ptr[1] = ptr[1] * ptr[3] / 255;
 				ptr[2] = ptr[2] * ptr[3] / 255;
@@ -125,94 +104,75 @@ struct texbuilder : putki::builder::handler_i
 		}
 
 		// uncrop
-		unsigned int *outData = png.pixels;
-		if (out_width != png.width || out_height != png.height)
+		unsigned int *outData = pnginfo.pixels;
+		if (out_width != pnginfo.width || out_height != pnginfo.height)
 		{
 			// only do uncrop
-			RECORD_INFO(record, "Uncropping to " << out_width << "x" << out_height)
+			RECORD_INFO(info->record, "Uncropping to " << out_width << "x" << out_height)
 			outData = new unsigned int[out_width * out_height];
 
-			for (int y=0;y<out_height;y++)
+			for (int y = 0; y < out_height; y++)
 			{
-				int srcy = y < png.height ? y : png.height - 1;
-				unsigned int *srcLine = png.pixels + png.width * srcy;
+				int srcy = y < pnginfo.height ? y : pnginfo.height - 1;
+				unsigned int *srcLine = pnginfo.pixels + pnginfo.width * srcy;
 				unsigned int *dstLine = outData + out_width * y;
 
-				for (int x=0;x<png.width;x++)
+				for (int x = 0; x < pnginfo.width; x++)
 					*dstLine++ = *srcLine++;
 
 				// fill the rest with the last pixel
-				for (int x=png.width;x<out_width;x++)
-					*dstLine++ = *(srcLine-1);
+				for (int x = pnginfo.width; x < out_width; x++)
+					*dstLine++ = *(srcLine - 1);
 			}
 		}
 
-		std::string path_res(path);
-		path_res.append("_out");
-		std::string path_res_data(path_res + "_data");
+		if (outputFormat->rtti_type_id() == inki::texture_output_format_raw::type_id())
+		{			
+			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "rawdc");
+			data->config = outputFormat->storage_configuration;
 
-		if (outputFormat->rtti_type_ref() == inki::texture_output_format_raw::type_id())
-		{
-			inki::texture_output_raw *raw_tex = inki::texture_output_raw::alloc();
-			
-			texture->output = raw_tex;
-			texture->output->data = inki::data_container::alloc();
-			texture->output->data->config = outputFormat->storage_configuration;
-			std::vector<unsigned char> & bytesOut = texture->output->data->bytes;
+			std::vector<unsigned char> & bytesOut = data->bytes;
 
 			// RGBA
-			for (int i=0;i<out_width * png.height;i++)
+			for (int i = 0; i < out_width * pnginfo.height; i++)
 			{
 				// RGBA
 				bytesOut.push_back((outData[i] >> 16) & 0xff);
-				bytesOut.push_back((outData[i] >>  8) & 0xff);
-				bytesOut.push_back((outData[i] >>  0) & 0xff);
+				bytesOut.push_back((outData[i] >> 8) & 0xff);
+				bytesOut.push_back((outData[i] >> 0) & 0xff);
 				bytesOut.push_back((outData[i] >> 24) & 0xff);
 			}
-			
-			add_output(context, record, path_res.c_str(), raw_tex);
-			add_output(context, record, path_res_data.c_str(), raw_tex->data);
-		}
-		else if (outputFormat->rtti_type_ref() == inki::texture_output_format_png::type_id())
-		{
-			// these are the direct load textures.
-			inki::texture_output_png *pngObj = inki::texture_output_png::alloc();
-			pngObj->u0 = u0;
-			pngObj->v0 = v0;
-			pngObj->u1 = u1;
-			pngObj->v1 = v1;
-			
-			RECORD_INFO(record, "[TextureOutputFormatPng] - Source image [" << png.width << "x" << png.height << "] => [" << texture->width << "x" << texture->height << "]")
-			
-			ccgui::pngutil::write_buffer wb = ccgui::pngutil::write_to_mem(outData, out_width, out_height, ((inki::texture_output_format_png*)outputFormat)->compression_level);
-			
-			texture->output = pngObj;
-			texture->output->data = inki::data_container::alloc();
-			texture->output->data->config = outputFormat->storage_configuration;
-			texture->output->data->bytes.insert(texture->output->data->bytes.begin(), (unsigned char*)wb.output, (unsigned char*)(wb.output + wb.size));
-			texture->output->data->file_type = "png";
 
+			putki::ptr<inki::texture_output_raw> raw_tex = putki::builder::create_build_output<inki::texture_output_raw>(info, "raw");
+			raw_tex->data = data;
+			texture->output = raw_tex;
+		}
+		else if (outputFormat->rtti_type_id() == inki::texture_output_format_png::type_id())
+		{
+			RECORD_INFO(info->record, "[TextureOutputFormatPng] - Source image [" << pnginfo.width << "x" << pnginfo.height << "] => [" << texture->width << "x" << texture->height << "]")
+			
+			kosmos::pngutil::write_buffer wb = kosmos::pngutil::write_to_mem(outData, out_width, out_height, ((inki::texture_output_format_png*)outputFormat)->compression_level);
+			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "pngdc");
+			data->config = outputFormat->storage_configuration;
+			data->file_type = "png";
+			data->bytes.insert(texture->output->data->bytes.begin(), (unsigned char*)wb.output, (unsigned char*)(wb.output + wb.size));
 			::free(wb.output);
-			
-			add_output(context, record, path_res.c_str(), pngObj);
-			add_output(context, record, path_res_data.c_str(), texture->output->data);
-		}
-		else if (outputFormat->rtti_type_ref() == inki::texture_output_format_jpeg::type_id())
-		{
-			// these are the direct load textures.
-			inki::texture_output_jpeg *jpgObj = inki::texture_output_jpeg::alloc();
-			jpgObj->u0 = u0;
-			jpgObj->v0 = v0;
-			jpgObj->u1 = u1;
-			jpgObj->v1 = v1;
-			texture->output = jpgObj;
 
-			int buf_size = 4*1024*1024;
+			putki::ptr<inki::texture_output_png> png_tex = putki::builder::create_build_output<inki::texture_output_png>(info, "png");
+			png_tex->u0 = u0;
+			png_tex->v0 = v0;
+			png_tex->u1 = u1;
+			png_tex->v1 = v1;
+			texture->output = png_tex;
+		}
+		else if (outputFormat->rtti_type_id() == inki::texture_output_format_jpeg::type_id())
+		{
+			int buf_size = 4 * 1024 * 1024;
 			char *databuffer = new char[buf_size];
 
 			// swap order in-place in the png buffer (naughty)
 			unsigned char *pngpixels = (unsigned char*)outData;
-			for (unsigned int i=0;i<out_width*out_height;i++)
+			for (unsigned int i = 0; i < out_width*out_height; i++)
 			{
 				unsigned char t0 = pngpixels[0];
 				unsigned char t1 = pngpixels[1];
@@ -233,35 +193,41 @@ struct texbuilder : putki::builder::handler_i
 
 			if (!jpge::compress_image_to_jpeg_file_in_memory(databuffer, buf_size, out_width, out_height, 4, (unsigned char*)outData, p))
 			{
-				RECORD_ERROR(record, "JPEG compression failed");
+				RECORD_ERROR(info->record, "JPEG compression failed");
 				return false;
 			}
-			RECORD_INFO(record, "[jpeg] compressed " << out_width << "x" << out_height << " to " << buf_size << " bytes.")
-			
-			texture->output = jpgObj;
-			texture->output->data = inki::data_container::alloc();
-			texture->output->data->config = outputFormat->storage_configuration;
-			texture->output->data->bytes.insert(texture->output->data->bytes.begin(), (unsigned char*)databuffer, (unsigned char*)(databuffer + buf_size));
-			texture->output->data->file_type = "jpeg";
-			
-			add_output(context, record, path_res.c_str(), jpgObj);
-			add_output(context, record, path_res_data.c_str(), texture->output->data);
-		
-			delete [] databuffer;
+			RECORD_INFO(info->record, "[jpeg] compressed " << out_width << "x" << out_height << " to " << buf_size << " bytes.")
+
+			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "pngdc");
+			data->config = outputFormat->storage_configuration;
+			data->file_type = "jpg";
+			data->bytes.insert(texture->output->data->bytes.begin(), (unsigned char*)databuffer, (unsigned char*)(databuffer + buf_size));
+
+			// these are the direct load textures.
+			putki::ptr<inki::texture_output_jpeg> jpg_tex = putki::builder::create_build_output<inki::texture_output_jpeg>(info, "jpg");
+			jpg_tex->u0 = u0;
+			jpg_tex->v0 = v0;
+			jpg_tex->u1 = u1;
+			jpg_tex->v1 = v1;
+			jpg_tex->data = data;
+			texture->output = jpg_tex;
+			delete[] databuffer;
 		}
 
-		if (outData != png.pixels)
+		if (outData != pnginfo.pixels)
 		{
-			delete [] outData;
+			delete[] outData;
 		}
 
-		ccgui::pngutil::free(&png);
-		return false;
+		kosmos::pngutil::free(&pnginfo);
+		return true;
 	}
-};
+}
 
 void register_texture_builder(putki::builder::data *builder)
 {
-	static texbuilder fb;
-	putki::builder::add_data_builder(builder, "Texture", &fb);
+	putki::builder::handler_info info[1] = {
+		{ inki::data_container::type_id(), "texture-builder-1", build_texture, 0 }
+	};
+	putki::builder::add_handlers(builder, &info[0], &info[1]);
 }

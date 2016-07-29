@@ -1,6 +1,5 @@
 #include "pngutil.h"
 
-#include <putki/builder/resource.h>
 #include <putki/builder/builder.h>
 
 #include <png.h>
@@ -11,7 +10,7 @@
 
 #include <string>
 
-namespace ccgui
+namespace kosmos
 {
 	namespace pngutil
 	{
@@ -119,32 +118,18 @@ png_create_write_struct_failed:
 			return wb;
 		}
 
-		std::string write_to_temp(putki::builder::data *builder, const char *path, unsigned int *pixbuf, unsigned int width, unsigned int height)
+		bool load_from_resource(const putki::builder::build_info* info, const char* path, loaded_png* out)
 		{
-			std::string outpath;
-			write_buffer wb = write_to_mem(pixbuf, width, height, 1);
-			if (wb.output)
-			{
-				outpath = putki::resource::save_temp(builder, path, wb.output, (long long) wb.size);
-				::free(wb.output);
-			}
-
-			return outpath;
+			out->bpp = 32;
+			out->pixels = new unsigned int[1];
+			out->pixels[0] = 0xff00ffff;
+			out->width = 1;
+			out->height = 1;
+			return true;
 		}
 
-		std::string write_to_output(putki::builder::data *builder, const char *path, unsigned int *pixbuf, unsigned int width, unsigned int height)
-		{
-			std::string outpath;
-			write_buffer wb = write_to_mem(pixbuf, width, height, 9);
-			if (wb.output)
-			{
-				outpath = putki::resource::save_output(builder, path, wb.output, (long long) wb.size);
-				::free(wb.output);
-			}
-			return outpath;
-		}
-
-		bool load_internal(const char *path, loaded_png *out, bool header_only)
+		/*
+		bool load(cosst , loaded_png *out, bool header_only)
 		{
 			png_structp png_ptr;
 			png_infop info_ptr;
@@ -240,20 +225,10 @@ png_create_write_struct_failed:
 			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
 
-			/* Close the file */
 			fclose(fp);
-			return true;
+			return true;			
 		}
-
-		bool load_info(const char *path, loaded_png *out)
-		{
-			return load_internal(path, out, true);
-		}
-
-		bool load(const char *path, loaded_png *out)
-		{
-			return load_internal(path, out, false);
-		}
+		*/
 
 		void free(loaded_png *png)
 		{

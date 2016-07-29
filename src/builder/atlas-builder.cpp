@@ -1,9 +1,7 @@
 #include <putki/builder/build.h>
 #include <putki/builder/builder.h>
-#include <putki/builder/resource.h>
 #include <putki/builder/build-db.h>
 #include <putki/builder/log.h>
-#include <putki/builder/db.h>
 
 #include "kosmos-builder-utils/binpacker/maxrects_binpack.h"
 #include "kosmos-builder-utils/pngutil.h"
@@ -110,22 +108,13 @@ namespace
 
 		//return px[s_width * y + x];
 	}
-}
 
-struct atlasbuilder : putki::builder::handler_i
-{
-	virtual const char *version() {
-		return builder_version;
-	}
+	bool build_atlas(const putki::builder::build_info* info)
+	{		
+		inki::atlas *atlas = (inki::atlas *) info->object;
 
-	virtual bool handle(putki::builder::build_context *context, putki::builder::data *builder, putki::build_db::record *record, putki::db::data *input, const char *path, putki::instance_t obj)
-	{
-		inki::atlas *atlas = (inki::atlas *) obj;
-
-		std::vector<ccgui::pngutil::loaded_png> loaded;
+		std::vector<kosmos::pngutil::loaded_png> loaded;
 		std::vector<rbp::InputRect> inputRects;
-
-//		static unsigned int fakepixel = 0xffff00ff;
 
 		int max_width = 1;
 		int max_height = 1;
@@ -139,33 +128,19 @@ struct atlasbuilder : putki::builder::handler_i
 
 		for (unsigned int i=0;i<atlas->inputs.size();i++)
 		{
-			if (!atlas->inputs[i])
+			if (!atlas->inputs[i].get())
 			{
-				RECORD_WARNING(record, "Blank entry in atlas at slot " << i)
+				RECORD_WARNING(info->record, "Blank entry in atlas at slot " << i)
 				continue;
 			}
 
-			ccgui::pngutil::loaded_png png;
-			if (!ccgui::pngutil::load(putki::resource::real_path(builder, atlas->inputs[i]->source.c_str()).c_str(), &png))
+			kosmos::pngutil::loaded_png png;
+			if (!kosmos::pngutil::load_from_resource(info, atlas->inputs[i]->source.c_str(), &png))
 			{
-				RECORD_WARNING(record, "Failed to load png");
+				RECORD_WARNING(info->record, "Failed to load png");
 			}
 			else
-			{
-				const char *path = atlas->inputs[i]->source.c_str();
-				const char *obj_path = putki::db::pathof(input, atlas->inputs[i]);
-				if (obj_path)
-				{
-					putki::build_db::add_input_dependency(record, obj_path);
-				}
-				else
-				{
-					std::cerr << "COULD NOT RESOLVE PATH POINTED TO IN LIST" << std::endl;
-					std::cerr << "INPUT DEPENDENCIES WILL NOT WORK PROPERLY" << std::endl;
-				}
-
-				putki::build_db::add_external_resource_dependency(record, path, putki::resource::signature(builder, path).c_str());
-
+			{		
 				loaded.push_back(png);
 
 				rbp::InputRect ir;
@@ -182,11 +157,9 @@ struct atlasbuilder : putki::builder::handler_i
 				{
 					max_height = ir.height;
 				}
-
-				RECORD_INFO(record, " - " << atlas->inputs[i]->source.c_str() << " loaded [" << png.width << "x" << png.height << "]")
+				RECORD_INFO(info->record, " - " << atlas->inputs[i]->source.c_str() << " loaded [" << png.width << "x" << png.height << "]")
 			}
 		}
-
 
 		for (int i=0;i<g_outputTexConfigs;i++)
 		{
@@ -257,11 +230,11 @@ struct atlasbuilder : putki::builder::handler_i
 			ao.height= out_height;
 			ao.scale = g_outputTexConf[i].scale;
 
-			RECORD_INFO(record, "Packing into " << out_width << "x" << out_height)
+			RECORD_INFO(info->record, "Packing into " << out_width << "x" << out_height)
 
 			for (unsigned int k=0;k<packedRects.size();k++)
 			{
-				ccgui::pngutil::loaded_png const &g = loaded[packedRects[k].id];
+				kosmos::pngutil::loaded_png const &g = loaded[packedRects[k].id];
 				rbp::Rect const &out = packedRects[k];
 
 				sample_kernel krn;
@@ -274,49 +247,40 @@ struct atlasbuilder : putki::builder::handler_i
 				}
 
 				inki::atlas_entry e;
-				e.id = putki::db::pathof_including_unresolved(input, atlas->inputs[packedRects[k].id]);
+				e.id = atlas->inputs[packedRects[k].id].path();
 				e.u0 = float(out.x + border) / float(out_width);
 				e.v0 = float(out.y + border) / float(out_height);
 				e.u1 = float(out.x + out.width - border) / float(out_width);
 				e.v1 = float(out.y + out.height - border) / float(out_height);
-
 				ao.entries.push_back(e);
 			}
 
-			std::stringstream str;
-			str << path << "_atlas_" << i;
-
-			std::string output_atlas_path = str.str() + "_atlas.png";
-			output_atlas_path = ccgui::pngutil::write_to_temp(builder, output_atlas_path.c_str(), outBmp, out_width, out_height);
-			putki::builder::touched_temp_resource(builder, output_atlas_path.c_str());
-			
+			kosmos::pngutil::write_buffer wb = kosmos::pngutil::write_to_mem(outBmp, out_width, out_height, 2);
+			std::string output_atlas_path = putki::builder::store_resource_tag(info, "out.png", wb.output, wb.size);
+			::free(wb.output);
 
 			{
-				std::string outpath = str.str();
-
 				// create new texture.
-				inki::texture *texture = inki::texture::alloc();
+				putki::ptr<inki::texture> texture = putki::builder::create_build_output<inki::texture>(info, "out-tex");
 				texture->source = output_atlas_path;
 				texture->configuration = atlas->output_configuration;
-
-				add_output(context, record, outpath.c_str(), texture);
-
 				ao.texture = texture;
 				atlas->outputs.push_back(ao);
 			}
 
 			for (unsigned int i=0;i!=loaded.size();i++)
-				ccgui::pngutil::free(&loaded[i]);
+				kosmos::pngutil::free(&loaded[i]);
 
 			delete [] outBmp;
 		}
-
-		return false;
+		return true;
 	}
 };
 
 void register_atlas_builder(putki::builder::data *builder)
 {
-	static atlasbuilder fb;
-	putki::builder::add_data_builder(builder, "Atlas", &fb);
+	putki::builder::handler_info info[1] = {
+		{ inki::atlas::type_id(), "atlas-builder-1", build_atlas, 0 }
+	};
+	putki::builder::add_handlers(builder, &info[0], &info[1]);
 }
