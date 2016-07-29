@@ -1,6 +1,6 @@
 package kosmos;
 
-import inki.Kosmos;
+import putked.inki.Kosmos;
 
 import java.io.*;
 
@@ -8,15 +8,15 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import putked.DataHelper;
 import putked.DataImporter;
-import putked.Interop;
+import putked.DataObject;
 
-public class TextureImporter implements DataImporter 
+public class TextureImporter implements putked.DataImporter
 {
 	public String getName()
 	{
 		return "Texture";
 	}
-	
+
 	public boolean importTo(String path)
 	{
 		System.out.println("Importing to [" + path +"]");
@@ -33,13 +33,15 @@ public class TextureImporter implements DataImporter
 				q.proposedPath = path + name.substring(0, p);
 			else
 				q.proposedPath = path + name;
-			
+
 			q.proposedResPath = path + name;
 			putked.Main.s_instance.askImportFinalization(q, null);
-			
+
 			if (q.accepted)
 			{
+				/*
 				try {
+
 					Interop.writeResFile(selectedFile, q.proposedResPath);
 					Interop.Type t = Kosmos.Texture._getType();
 					Kosmos.Texture tex = (Kosmos.Texture) DataHelper.createPutkEdObj(t.createInstance(q.proposedPath));
@@ -52,6 +54,8 @@ public class TextureImporter implements DataImporter
 					System.out.println("Failed to write res file!");
 					return false;
 				}
+				*/
+				return false;
 			}
 		}
 		return false;

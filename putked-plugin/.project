@@ -16,9 +16,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>java</name>
+			<name>_gen</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/_gen/java</locationURI>
+			<locationURI>GEN_FOLDER</locationURI>
 		</link>
 		<link>
 			<name>src/inki</name>
@@ -26,4 +26,10 @@
 			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/_gen/java/inki</locationURI>
 		</link>
 	</linkedResources>
+	<variableList>
+		<variable>
+			<name>GEN_FOLDER</name>
+			<value>$%7BPARENT-1-PROJECT_LOC%7D/_gen/java</value>
+		</variable>
+	</variableList>
 </projectDescription>

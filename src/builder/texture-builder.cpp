@@ -59,7 +59,7 @@ namespace
 
 		// First load the information for the texture and fill in width & height
 		kosmos::pngutil::loaded_png pnginfo;
-		if (kosmos::pngutil::load_from_resource(info, texture->source.c_str(), &pnginfo))
+		if (kosmos::pngutil::load_info_from_resource(info, texture->source.c_str(), &pnginfo))
 		{
 			texture->width = texture->source_width = pnginfo.width;
 			texture->height = texture->source_height = pnginfo.height;
@@ -77,8 +77,14 @@ namespace
 		if (!outputFormat)
 		{
 			RECORD_INFO(info->record, "No output format, skipping generation")
-				return false;
+            return true;
 		}
+        
+        if (!kosmos::pngutil::load_from_resource(info, texture->source.c_str(), &pnginfo))
+        {
+            RECORD_ERROR(info->record, "png loading failed!");
+            return false;
+        }
 
 		int out_width, out_height;
 		resize(outputFormat->resize_mode, pnginfo.width, pnginfo.height, &out_width, &out_height);
@@ -155,7 +161,7 @@ namespace
 			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "pngdc");
 			data->config = outputFormat->storage_configuration;
 			data->file_type = "png";
-			data->bytes.insert(texture->output->data->bytes.begin(), (unsigned char*)wb.output, (unsigned char*)(wb.output + wb.size));
+			data->bytes.insert(data->bytes.begin(), (unsigned char*)wb.output, (unsigned char*)(wb.output + wb.size));
 			::free(wb.output);
 
 			putki::ptr<inki::texture_output_png> png_tex = putki::builder::create_build_output<inki::texture_output_png>(info, "png");
@@ -227,7 +233,7 @@ namespace
 void register_texture_builder(putki::builder::data *builder)
 {
 	putki::builder::handler_info info[1] = {
-		{ inki::data_container::type_id(), "texture-builder-1", build_texture, 0 }
+		{ inki::texture::type_id(), "texture-builder-1", build_texture, 0 }
 	};
 	putki::builder::add_handlers(builder, &info[0], &info[1]);
 }

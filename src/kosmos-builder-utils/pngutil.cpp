@@ -36,6 +36,57 @@ namespace kosmos
 				memcpy(p->output + p->size, data, length);
 				p->size += length;
 			}
+            
+            struct read_buffer
+            {
+                const putki::builder::build_info* info;
+                char buf[4096];
+                size_t pos, len;
+                size_t res_pos;
+                const char* path;
+            };
+            
+            void read(png_structp png_ptr, png_bytep data, png_size_t length)
+            {
+                read_buffer* p = (read_buffer*) png_get_io_ptr(png_ptr);
+                size_t count = p->len - p->pos;
+                if (length <= count)
+                {
+                    memcpy(data, &p->buf[p->pos], length);
+                    p->pos = p->pos + length;
+                    return;
+                }
+                if (count > 0)
+                {
+                    memcpy(data, &p->buf[p->pos], count);
+                    p->pos = 0;
+                    p->len = 0;
+                    read(png_ptr, data + count, length - count);
+                    return;
+                }
+                
+                if (length > sizeof(p->buf))
+                {
+                    size_t got = putki::builder::read_resource_segment(p->info, p->path, (char*)data, p->res_pos, p->res_pos + length);
+                    if (got != length)
+                    {
+                        png_err(png_ptr);
+                        return;
+                    }
+                    p->res_pos = p->res_pos + length;
+                }
+                else
+                {
+                    p->len = putki::builder::read_resource_segment(p->info, p->path, p->buf, p->res_pos, p->res_pos + sizeof(p->buf));
+                    p->res_pos = p->res_pos + p->len;
+                    if (p->len == 0)
+                    {
+                        png_err(png_ptr);
+                        return;
+                    }
+                    read(png_ptr, data, length);
+                }
+            }
 
 			void flush(png_structp png_ptr)
 			{
@@ -118,58 +169,30 @@ png_create_write_struct_failed:
 			return wb;
 		}
 
-		bool load_from_resource(const putki::builder::build_info* info, const char* path, loaded_png* out)
-		{
-			out->bpp = 32;
-			out->pixels = new unsigned int[1];
-			out->pixels[0] = 0xff00ffff;
-			out->width = 1;
-			out->height = 1;
-			return true;
-		}
-
-		/*
-		bool load(cosst , loaded_png *out, bool header_only)
+        bool load(const putki::builder::build_info* info, const char* path, loaded_png *out, bool header_only)
 		{
 			png_structp png_ptr;
 			png_infop info_ptr;
 			unsigned int sig_read = 0;
 			int color_type, interlace_type;
-			FILE *fp;
-
-			if (!(fp = fopen(path, "rb")))
-			{
-				return false;
-			}
-
-			// try reading
-			char tmpbuf[16];
-			int rd = fread(tmpbuf, 1, sizeof(tmpbuf), fp);
-			if (rd != sizeof(tmpbuf))
-			{
-				fclose(fp);
-				return false;
-			}
-
-			fseek(fp, 0, SEEK_SET);
-
+            
+            read_buffer rb;
+            rb.pos = 0;
+            rb.len = 0;
+            rb.res_pos = 0;
+            rb.info = info;
+            rb.path = path;
+            
 			png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
-
-			if (png_ptr == NULL)
-			{
-				fclose(fp);
-				return false;
-			}
+            png_set_read_fn(png_ptr, &rb, read);
 
 			info_ptr = png_create_info_struct(png_ptr);
 			if (!info_ptr)
 			{
-				fclose(fp);
 				png_destroy_read_struct(&png_ptr, NULL, NULL);
 				return false;
 			}
 
-			png_init_io(png_ptr, fp);
 			png_set_sig_bytes(png_ptr, sig_read);
 
 			png_uint_32 width, height;
@@ -179,14 +202,11 @@ png_create_write_struct_failed:
 			{
 				png_read_info(png_ptr, info_ptr);
 				png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
-
 				out->width = width;
 				out->height = height;
 				out->bpp = 32;
-
 				out->pixels = 0;
 				png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-				fclose(fp);
 				return true;
 			}
 
@@ -223,12 +243,18 @@ png_create_write_struct_failed:
 			}
 
 			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-
-
-			fclose(fp);
-			return true;			
+			return true;
 		}
-		*/
+        
+        bool load_from_resource(const putki::builder::build_info* info, const char* path, loaded_png* out)
+        {
+            return load(info, path, out, false);
+        }
+        
+        bool load_info_from_resource(const putki::builder::build_info* info, const char* path, loaded_png* out)
+        {
+            return load(info, path, out, true);
+        }
 
 		void free(loaded_png *png)
 		{

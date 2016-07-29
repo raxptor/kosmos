@@ -1,6 +1,6 @@
 package kosmos;
 
-import inki.Kosmos;
+import putked.inki.Kosmos;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -13,33 +13,33 @@ import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 import putked.DataHelper;
 import putked.Editor;
-import putked.Interop;
-import putked.Interop.MemInstance;
-import putked.Interop.Type;
+import putked.DataObject;;
 
-public class TextureEditor implements Editor 
+public class TextureEditor implements Editor
 {
 	@Override
-	public String getName() 
+	public String getName()
 	{
 		return "TextureEditor";
 	}
-	
-	@Override 
+
+	@Override
 	public int getPriority()
 	{
 		return -1;
 	}
 
 	@Override
-	public boolean canEdit(Type type) 
+	public boolean canEdit(putki.Compiler.ParsedStruct type)
 	{
-		return type.hasParent(Kosmos.Texture._getType());
+		return false;
+//		return type.hasParent(putked.inki.KOsmo)._getType());
 	}
 
 	@Override
-	public Node createUI(MemInstance mi) 
+	public Node createUI(DataObject obj)
 	{
+		/*
 		putked.ProxyObject wrap = DataHelper.createPutkEdObj(mi);
 		Kosmos.Texture tex = (Kosmos.Texture) wrap;
 		if (tex == null)
@@ -47,14 +47,14 @@ public class TextureEditor implements Editor
 
 		VBox info = new VBox();
 		info.setAlignment(Pos.CENTER);
-		
+
 		class _TMP {
 			public int version;
 		}
-		
+
 		final _TMP tmp = new _TMP();
 		tmp.version = mi.getVersion();
-		
+
 		AnimationTimer at = new AnimationTimer() {
 			@Override
 			public void handle(long now) {
@@ -67,23 +67,23 @@ public class TextureEditor implements Editor
 						Image teximg = new Image("file:" + f.getAbsolutePath(), false);
 						Canvas canv = new Canvas(teximg.getWidth(), teximg.getHeight());
 						GraphicsContext gc = canv.getGraphicsContext2D();
-				
+
 						gc.setFill(Color.BLUE);
 						gc.drawImage(teximg, 0, 0);
-						
+
 						Label label = new Label();
 						label.setText((int)teximg.getWidth() + "x" + (int)teximg.getHeight());
-						
+
 						info.getChildren().setAll(canv, label);
 					}
 					else
 					{
 						info.getChildren().setAll(new Label("File does not exist!"));
-					}					
+					}
 				}
 			}
 		};
-		
+
 		info.sceneProperty().addListener((p, oldValue, newValue) -> {
 			if (oldValue == null && newValue != null) {
 				at.start();
@@ -91,16 +91,18 @@ public class TextureEditor implements Editor
 				at.stop();
 			}
 		});
-		
+
 		VBox box = new VBox();
 		putked.PropertyEditor pe = new putked.PropertyEditor();
 		Node proped = pe.createUI(mi);
 		box.getChildren().add(proped);
 		box.getChildren().add(info);
 		VBox.setVgrow(info,  Priority.ALWAYS);
-		
+
 		info.getStyleClass().add("generic-custom-editor-box");
 
 		return box;
+		*/
+		return null;
 	}
 }

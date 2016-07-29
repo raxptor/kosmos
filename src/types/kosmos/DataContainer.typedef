@@ -1,8 +1,3 @@
-StreamingPackage
-{
-	string PackagePath
-}
-
 DataFileBase no-out
 {
 	string PathPrefix
@@ -24,7 +19,6 @@ enum DataContainerOutputMode
 DataContainerConfiguration no-out rtti
 {
 	enum DataContainerOutputMode Mode
-	ptr StreamingPackage Streaming
 	ptr DataFileBase FileBase
 }
 
@@ -37,13 +31,23 @@ DataContainer [in, out] rtti
 	[hidden] ptr DataContainerOutput Output
 }
 
+// Stored in the actua streaming file
+DataContainerStreamingData
+{
+	byte[] Bytes
+}
+
+DataContainerStreamingInfo
+{
+	string[] Textures
+}
+
 DataContainerOutputStreaming : DataContainerOutput non-instantiable
 {
-	ptr StreamingPackage Package
-	string ResourceID
+	string StreamingDataPath
 }
 
 DataContainerOutputFile : DataContainerOutput non-instantiable
 {
-	string FilePath
+	file FilePath
 }

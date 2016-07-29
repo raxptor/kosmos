@@ -19,7 +19,7 @@ namespace {
 			{
 				RECORD_WARNING(info->record, "Ignoring SourceFile because there is data in the shader already");
 			}
-			return false;
+			return true;
 		}
 
 		putki::builder::resource res;
