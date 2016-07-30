@@ -47,7 +47,7 @@ void kosmos_streamer_postbuild(putki::build::postbuild_info* info)
     }
     
     putki::package::data *pkg = putki::package::create(info->output);
-    putki::package::add(pkg, "/streaming-info", false);
+    putki::package::add(pkg, "streaming-info", false);
     
     for (size_t i=0;i<entries;i++)
     {
@@ -60,7 +60,7 @@ void kosmos_streamer_postbuild(putki::build::postbuild_info* info)
         reg.textures.push_back(paths[i]);
     }
     
-    putki::builder::add_post_build_object(info->builder, inki::data_container_streaming_info::th(), &reg, "/streaming-info");
+    putki::builder::add_post_build_object(info->builder, inki::data_container_streaming_info::th(), &reg, "streaming-info");
     
     
     putki::build::commit_package(pkg, info->pconf, "streaming.pkg");

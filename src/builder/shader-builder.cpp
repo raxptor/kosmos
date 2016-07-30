@@ -26,6 +26,7 @@ namespace {
 		if (!putki::builder::fetch_resource(info, shader->source_file.c_str(), &res))
 		{
 			RECORD_ERROR(info->record, "Failed to read [" << shader->source_file << "]!");
+			return true;
 		}
 
 		shader->data.insert(shader->data.begin(), (char*)res.data, (char*)res.data + res.size);

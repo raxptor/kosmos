@@ -36,57 +36,57 @@ namespace kosmos
 				memcpy(p->output + p->size, data, length);
 				p->size += length;
 			}
-            
-            struct read_buffer
-            {
-                const putki::builder::build_info* info;
-                char buf[4096];
-                size_t pos, len;
-                size_t res_pos;
-                const char* path;
-            };
-            
-            void read(png_structp png_ptr, png_bytep data, png_size_t length)
-            {
-                read_buffer* p = (read_buffer*) png_get_io_ptr(png_ptr);
-                size_t count = p->len - p->pos;
-                if (length <= count)
-                {
-                    memcpy(data, &p->buf[p->pos], length);
-                    p->pos = p->pos + length;
-                    return;
-                }
-                if (count > 0)
-                {
-                    memcpy(data, &p->buf[p->pos], count);
-                    p->pos = 0;
-                    p->len = 0;
-                    read(png_ptr, data + count, length - count);
-                    return;
-                }
-                
-                if (length > sizeof(p->buf))
-                {
-                    size_t got = putki::builder::read_resource_segment(p->info, p->path, (char*)data, p->res_pos, p->res_pos + length);
-                    if (got != length)
-                    {
-                        png_err(png_ptr);
-                        return;
-                    }
-                    p->res_pos = p->res_pos + length;
-                }
-                else
-                {
-                    p->len = putki::builder::read_resource_segment(p->info, p->path, p->buf, p->res_pos, p->res_pos + sizeof(p->buf));
-                    p->res_pos = p->res_pos + p->len;
-                    if (p->len == 0)
-                    {
-                        png_err(png_ptr);
-                        return;
-                    }
-                    read(png_ptr, data, length);
-                }
-            }
+
+			struct read_buffer
+			{
+				const putki::builder::build_info* info;
+				char buf[4096];
+				size_t pos, len;
+				size_t res_pos;
+				const char* path;
+			};
+
+			void read(png_structp png_ptr, png_bytep data, png_size_t length)
+			{
+				read_buffer* p = (read_buffer*) png_get_io_ptr(png_ptr);
+				size_t count = p->len - p->pos;
+				if (length <= count)
+				{
+					memcpy(data, &p->buf[p->pos], length);
+					p->pos = p->pos + length;
+					return;
+				}
+				if (count > 0)
+				{
+					memcpy(data, &p->buf[p->pos], count);
+					p->pos = 0;
+					p->len = 0;
+					read(png_ptr, data + count, length - count);
+					return;
+				}
+
+				if (length > sizeof(p->buf))
+				{
+					size_t got = putki::builder::read_resource_segment(p->info, p->path, (char*)data, p->res_pos, p->res_pos + length);
+					if (got != length)
+					{
+						png_err(png_ptr);
+						return;
+					}
+					p->res_pos = p->res_pos + length;
+				}
+				else
+				{
+					p->len = putki::builder::read_resource_segment(p->info, p->path, p->buf, p->res_pos, p->res_pos + sizeof(p->buf));
+					p->res_pos = p->res_pos + p->len;
+					if (p->len == 0)
+					{
+						png_err(png_ptr);
+						return;
+					}
+					read(png_ptr, data, length);
+				}
+			}
 
 			void flush(png_structp png_ptr)
 			{
@@ -99,7 +99,7 @@ namespace kosmos
 			write_buffer wb;
 			wb.size = 0;
 			wb.output = 0;
-			
+
 			png_structp png_ptr = NULL;
 			png_infop info_ptr = NULL;
 			size_t x, y;
@@ -122,14 +122,14 @@ namespace kosmos
 
 			/* Set image attributes. */
 			png_set_IHDR (png_ptr,
-			              info_ptr,
-			              width,
-			              height,
-			              8,
-			              PNG_COLOR_TYPE_RGBA,
-			              PNG_INTERLACE_NONE,
-			              PNG_COMPRESSION_TYPE_DEFAULT,
-			              PNG_FILTER_TYPE_DEFAULT);
+					  info_ptr,
+					  width,
+					  height,
+					  8,
+					  PNG_COLOR_TYPE_RGBA,
+					  PNG_INTERLACE_NONE,
+					  PNG_COMPRESSION_TYPE_DEFAULT,
+					  PNG_FILTER_TYPE_DEFAULT);
 
 			/* Initialize rows of PNG. */
 			row_pointers = (png_byte**) png_malloc(png_ptr, height * sizeof (png_byte *));
@@ -154,7 +154,7 @@ namespace kosmos
 			png_write_png (png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 
 			/* The routine has successfully written the file, so we set
-			        "status" to a value which indicates success. */
+			 "status" to a value which indicates success. */
 
 			for (y=0;y<height;y++)
 			{
@@ -162,29 +162,35 @@ namespace kosmos
 			}
 
 			png_free(png_ptr, row_pointers);
-png_create_info_struct_failed:
+			png_create_info_struct_failed:
 			png_destroy_write_struct (&png_ptr, &info_ptr);
-png_create_write_struct_failed:
+			png_create_write_struct_failed:
 
 			return wb;
 		}
 
-        bool load(const putki::builder::build_info* info, const char* path, loaded_png *out, bool header_only)
+		bool load(const putki::builder::build_info* info, const char* path, loaded_png *out, bool header_only)
 		{
+			memset(out, 0x00, sizeof(loaded_png));
+			if (!path || !path[0])
+			{
+				return false;
+			}
+
 			png_structp png_ptr;
 			png_infop info_ptr;
 			unsigned int sig_read = 0;
 			int color_type, interlace_type;
-            
-            read_buffer rb;
-            rb.pos = 0;
-            rb.len = 0;
-            rb.res_pos = 0;
-            rb.info = info;
-            rb.path = path;
-            
+
+			read_buffer rb;
+			rb.pos = 0;
+			rb.len = 0;
+			rb.res_pos = 0;
+			rb.info = info;
+			rb.path = path;
+
 			png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
-            png_set_read_fn(png_ptr, &rb, read);
+			png_set_read_fn(png_ptr, &rb, read);
 
 			info_ptr = png_create_info_struct(png_ptr);
 			if (!info_ptr)
@@ -245,16 +251,16 @@ png_create_write_struct_failed:
 			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 			return true;
 		}
-        
-        bool load_from_resource(const putki::builder::build_info* info, const char* path, loaded_png* out)
-        {
-            return load(info, path, out, false);
-        }
-        
-        bool load_info_from_resource(const putki::builder::build_info* info, const char* path, loaded_png* out)
-        {
-            return load(info, path, out, true);
-        }
+
+		bool load_from_resource(const putki::builder::build_info* info, const char* path, loaded_png* out)
+		{
+			return load(info, path, out, false);
+		}
+
+		bool load_info_from_resource(const putki::builder::build_info* info, const char* path, loaded_png* out)
+		{
+			return load(info, path, out, true);
+		}
 
 		void free(loaded_png *png)
 		{
