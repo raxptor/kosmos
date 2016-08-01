@@ -40,7 +40,7 @@ namespace kosmos
 			struct read_buffer
 			{
 				const putki::builder::build_info* info;
-				char buf[4096];
+				char buf[128*1024];
 				size_t pos, len;
 				size_t res_pos;
 				const char* path;
@@ -77,8 +77,10 @@ namespace kosmos
 				}
 				else
 				{
-					p->len = putki::builder::read_resource_segment(p->info, p->path, p->buf, p->res_pos, p->res_pos + sizeof(p->buf));
-					p->res_pos = p->res_pos + p->len;
+					// For when header only is read.
+					size_t read_size = p->res_pos < 4096 ? 4096 : sizeof(p->buf);
+					p->len = putki::builder::read_resource_segment(p->info, p->path, p->buf, p->res_pos, p->res_pos + read_size);
+					p->res_pos = p->res_pos + read_size;
 					if (p->len == 0)
 					{
 						png_err(png_ptr);

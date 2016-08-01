@@ -73,7 +73,7 @@ namespace
 					filePath.append(cont->file_type);
 				RECORD_INFO(info->record, "Storing file to " << filePath);
 
-				putki::ptr<inki::data_container_output_file> file = putki::builder::create_build_output<inki::data_container_output_file>(info, "_tag");
+				putki::ptr<inki::data_container_output_file> file = putki::builder::create_build_output<inki::data_container_output_file>(info, "tag");
 				file->file_path = putki::builder::store_resource_path(info, filePath.c_str(), (char*)&cont->bytes[0], cont->bytes.size());
 				cont->output = file;
 				cont->bytes.clear();
@@ -116,7 +116,7 @@ namespace
 void register_data_container_builder(putki::builder::data *builder)
 {
 	putki::builder::handler_info info[1] = {
-		{ inki::data_container::type_id(), "datacontainer-builder-1", build_data_container, 0 }
+		{ inki::data_container::type_id(), "datacontainer-builder-3", build_data_container, 0 }
 	};
 	putki::builder::add_handlers(builder, &info[0], &info[1]);
 }

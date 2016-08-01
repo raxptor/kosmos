@@ -23,8 +23,6 @@ namespace
 		float k[KERNEL_SIZE * KERNEL_SIZE];
 	};
 
-	const char *builder_version = "atlas-builder-1";
-
 	void make_sample_kernel(sample_kernel *out, float rt, float suppression = 0.90f, float adjx=0, float adjy=0)
 	{
 		const float d = sqrt(-2 * logf(suppression)) / (rt * 2.0f * 3.1415f);
@@ -280,7 +278,7 @@ namespace
 void register_atlas_builder(putki::builder::data *builder)
 {
 	putki::builder::handler_info info[1] = {
-		{ inki::atlas::type_id(), "atlas-builder-1", build_atlas, 0 }
+		{ inki::atlas::type_id(), "atlas-builder-5", build_atlas, 0 }
 	};
 	putki::builder::add_handlers(builder, &info[0], &info[1]);
 }

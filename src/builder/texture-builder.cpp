@@ -133,7 +133,7 @@ namespace
 		}
 
 		if (outputFormat->rtti_type_id() == inki::texture_output_format_raw::type_id())
-		{			
+		{
 			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "rawdc");
 			data->config = outputFormat->storage_configuration;
 
@@ -169,6 +169,7 @@ namespace
 			png_tex->v0 = v0;
 			png_tex->u1 = u1;
 			png_tex->v1 = v1;
+			png_tex->data = data;
 			texture->output = png_tex;
 		}
 		else if (outputFormat->rtti_type_id() == inki::texture_output_format_jpeg::type_id())
@@ -233,7 +234,7 @@ namespace
 void register_texture_builder(putki::builder::data *builder)
 {
 	putki::builder::handler_info info[1] = {
-		{ inki::texture::type_id(), "texture-builder-1", build_texture, 0 }
+		{ inki::texture::type_id(), "texture-builder-1a", build_texture, 0 }
 	};
 	putki::builder::add_handlers(builder, &info[0], &info[1]);
 }
