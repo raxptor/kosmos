@@ -53,8 +53,8 @@ void kosmos_streamer_postbuild(putki::build::postbuild_info* info)
 			if (putki::objstore::fetch_object(info->temp, paths[i], &res))
 			{
 				std::string res_path = ((inki::data_container_streaming_resource*) res.obj)->resource_path;
-				res.th->free(res.obj);
 				putki::package::add_file(pkg, res_path.c_str(), true);
+				res.th->free(res.obj);
 			}
 			else
 			{
@@ -68,7 +68,6 @@ void kosmos_streamer_postbuild(putki::build::postbuild_info* info)
 		putki::builder::add_build_root(info->builder, paths[i], 1);
 	}
 
-
 	for (size_t i = 0; i < entries; i++)
 	{
 		putki::package::add(pkg, paths[i], false, true);
@@ -79,6 +78,8 @@ void kosmos_streamer_postbuild(putki::build::postbuild_info* info)
 	{
 		reg.textures.push_back(paths[i]);
 	}
+
+	putki::objstore::free_query_result(paths, entries);
 
 	putki::builder::add_post_build_object(info->builder, inki::data_container_streaming_info::th(), &reg, "streaming-info");
 	putki::build::commit_package(pkg, info->pconf, "streaming.pkg");
