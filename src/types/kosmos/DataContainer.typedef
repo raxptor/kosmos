@@ -10,26 +10,21 @@ DataContainerConfiguration no-out rtti
 	enum DataContainerOutputMode Mode	
 }
 
-DataContainerOutput [in, out] rtti non-instantiable
-{
-
-}
-
-DataContainerStreamingResource : DataContainerOutput non-instantiable
-{	
-	string ResourcePath	
-}
-
 DataContainerStreamingInfo non-instantiable
 {
-	string[] Textures
+	string[] DataContainers
 }
 
-DataContainer [in, out] rtti
+DataContainerStreamingResource non-instantiable 
+{
+	string StreamingFile
+}
+
+DataContainer [in, out] rtti non-instantiable
 {
 	[no-out] ptr DataContainerConfiguration Config
-	[no-out] string SourceFile
-	[hidden] byte[] Bytes
 	[hidden] [no-out] string FileType
+	[no-out] file SourceFile
+	[hidden] file EmbeddedFile
 	[hidden] ptr DataContainerStreamingResource Streaming
 }

@@ -134,10 +134,8 @@ namespace
 
 		if (outputFormat->rtti_type_id() == inki::texture_output_format_raw::type_id())
 		{
-			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "rawdc");
-			data->config = outputFormat->storage_configuration;
-
-			std::vector<unsigned char> & bytesOut = data->bytes;
+			std::vector<char> bytesOut;
+			bytesOut.reserve(out_width * pnginfo.height * 4);
 
 			// RGBA
 			for (int i = 0; i < out_width * pnginfo.height; i++)
@@ -150,6 +148,10 @@ namespace
 			}
 
 			putki::ptr<inki::texture_output_raw> raw_tex = putki::builder::create_build_output<inki::texture_output_raw>(info, "raw");
+
+			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "raw-dc");
+			data->config = outputFormat->storage_configuration;
+			data->source_file = putki::builder::store_resource_tag(info, "raw", &bytesOut[0], bytesOut.size());
 			raw_tex->data = data;
 			texture->output = raw_tex;
 		}
@@ -158,10 +160,10 @@ namespace
 			RECORD_INFO(info->record, "[TextureOutputFormatPng] - Source image [" << pnginfo.width << "x" << pnginfo.height << "] => [" << texture->width << "x" << texture->height << "]")
 			
 			kosmos::pngutil::write_buffer wb = kosmos::pngutil::write_to_mem(outData, out_width, out_height, ((inki::texture_output_format_png*)outputFormat)->compression_level);
-			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "pngdc");
+			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "png-dc");
 			data->config = outputFormat->storage_configuration;
+			data->source_file = putki::builder::store_resource_tag(info, "png", wb.output, wb.size);
 			data->file_type = "png";
-			data->bytes.insert(data->bytes.begin(), (unsigned char*)wb.output, (unsigned char*)(wb.output + wb.size));
 			::free(wb.output);
 
 			putki::ptr<inki::texture_output_png> png_tex = putki::builder::create_build_output<inki::texture_output_png>(info, "png");
@@ -205,10 +207,10 @@ namespace
 			}
 			RECORD_INFO(info->record, "[jpeg] compressed " << out_width << "x" << out_height << " to " << buf_size << " bytes.")
 
-			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "pngdc");
+			putki::ptr<inki::data_container> data = putki::builder::create_build_output<inki::data_container>(info, "jpeg-dc");
 			data->config = outputFormat->storage_configuration;
+			data->source_file = putki::builder::store_resource_tag(info, "jpeg", databuffer, buf_size);
 			data->file_type = "jpg";
-			data->bytes.insert(texture->output->data->bytes.begin(), (unsigned char*)databuffer, (unsigned char*)(databuffer + buf_size));
 
 			// these are the direct load textures.
 			putki::ptr<inki::texture_output_jpeg> jpg_tex = putki::builder::create_build_output<inki::texture_output_jpeg>(info, "jpg");
@@ -234,7 +236,7 @@ namespace
 void register_texture_builder(putki::builder::data *builder)
 {
 	putki::builder::handler_info info[1] = {
-		{ inki::texture::type_id(), "texture-builder-1a", build_texture, 0 }
+		{ inki::texture::type_id(), "texture-builder-1c", build_texture, 0 }
 	};
 	putki::builder::add_handlers(builder, &info[0], &info[1]);
 }
