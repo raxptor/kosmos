@@ -40,14 +40,34 @@ void kosmos_streamer_postbuild(putki::build::postbuild_info* info)
 	}
 
 	inki::data_container_streaming_info reg;
+	
+	putki::package::data *pkg = putki::build::create_package(info->pconf);
+	putki::package::add(pkg, "streaming-info", false, true);
 
 	for (size_t i = 0; i < entries; i++)
 	{
+		putki::objstore::object_info qi;
+		if (putki::objstore::query_object(info->temp, paths[i], &qi))
+		{
+			putki::objstore::fetch_obj_result res;
+			if (putki::objstore::fetch_object(info->temp, paths[i], &res))
+			{
+				std::string res_path = ((inki::data_container_streaming_resource*) res.obj)->resource_path;
+				res.th->free(res.obj);
+				putki::package::add_file(pkg, res_path.c_str(), true);
+			}
+			else
+			{
+				APP_ERROR("Could not fetch obj [" << paths[i] << "]!");
+			}
+		}
+		else
+		{
+			APP_ERROR("Could not query obj [" << paths[i] << "]!");
+		}
 		putki::builder::add_build_root(info->builder, paths[i], 1);
 	}
 
-	putki::package::data *pkg = putki::build::create_package(info->pconf);
-	putki::package::add(pkg, "streaming-info", false, true);
 
 	for (size_t i = 0; i < entries; i++)
 	{
