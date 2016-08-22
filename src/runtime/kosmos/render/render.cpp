@@ -60,17 +60,6 @@ namespace kosmos
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
-		const char *get_texture_file_path(outki::texture *texture)
-		{
-			if (!texture) return 0;
-			if (!texture->output) return 0;
-			if (!texture->output->data) return 0;
-			if (!texture->output->data->output) return 0;
-			outki::data_container_output_file *of = texture->output->data->output->exact_cast<outki::data_container_output_file>();
-			if (!of) return 0;
-			return of->file_path;
-		}
-
 		void update_texture(texture_ref *tex)
 		{
 			if (tex->dynamic)
@@ -193,7 +182,7 @@ namespace kosmos
 				{
 					if (LIVE_UPDATE(&i->second->container))
 						upd = true;
-					if (LIVE_UPDATE(&i->second->container->output))
+					if (LIVE_UPDATE(&i->second->container->streaming))
 						upd = true;
 				}
 

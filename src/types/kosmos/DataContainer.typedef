@@ -1,6 +1,13 @@
-DataFileBase no-out
+enum DataContainerOutputMode
 {
-	string PathPrefix
+	DCOUT_DISCARD
+	DCOUT_EMBED
+	DCOUT_STREAMING	
+}
+
+DataContainerConfiguration no-out rtti
+{
+	enum DataContainerOutputMode Mode	
 }
 
 DataContainerOutput [in, out] rtti non-instantiable
@@ -8,18 +15,14 @@ DataContainerOutput [in, out] rtti non-instantiable
 
 }
 
-enum DataContainerOutputMode
+DataContainerStreamingResource : DataContainerOutput non-instantiable
 {
-	DCOUT_DISCARD
-	DCOUT_STREAMING
-	DCOUT_EMBED
-	DCOUT_FILE
+	file ResourcePath	
 }
 
-DataContainerConfiguration no-out rtti
+DataContainerStreamingInfo non-instantiable
 {
-	enum DataContainerOutputMode Mode
-	ptr DataFileBase FileBase
+	string[] Textures
 }
 
 DataContainer [in, out] rtti
@@ -28,26 +31,8 @@ DataContainer [in, out] rtti
 	[no-out] string SourceFile
 	[hidden] byte[] Bytes
 	[hidden] [no-out] string FileType
-	[hidden] ptr DataContainerOutput Output
+	[hidden] ptr DataContainerStreamingResource Streaming
 }
 
-// Stored in the actua streaming file
-DataContainerStreamingData
-{
-	byte[] Bytes
-}
 
-DataContainerStreamingInfo
-{
-	string[] Textures
-}
 
-DataContainerOutputStreaming : DataContainerOutput non-instantiable
-{
-	string StreamingDataPath
-}
-
-DataContainerOutputFile : DataContainerOutput non-instantiable
-{
-	file FilePath
-}

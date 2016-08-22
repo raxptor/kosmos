@@ -31,42 +31,40 @@ void kosmos_register_handlers(putki::builder::data *builder)
 
 void kosmos_streamer_postbuild(putki::build::postbuild_info* info)
 {
-    const size_t max = 4096;
-    const char* paths[max];
-    size_t entries = putki::objstore::query_by_type(info->temp, inki::data_container_streaming_data::th(), paths, max);
-    if (entries > max)
-    {
-        APP_ERROR("Buffer too small.");
-    }
-    
-    inki::data_container_streaming_info reg;
+	const size_t max = 4096;
+	const char* paths[max];
+	size_t entries = putki::objstore::query_by_type(info->temp, inki::data_container_streaming_resource::th(), paths, max);
+	if (entries > max)
+	{
+		APP_ERROR("Buffer too small.");
+	}
 
-    for (size_t i=0;i<entries;i++)
-    {
-        putki::builder::add_build_root(info->builder, paths[i], 1);
-    }
-    
-    putki::package::data *pkg = putki::package::create(info->output);
-    putki::package::add(pkg, "streaming-info", false);
-    
-    for (size_t i=0;i<entries;i++)
-    {
-        putki::package::add(pkg, paths[i], false);
-    }
+	inki::data_container_streaming_info reg;
 
-    reg.textures.reserve(entries);
-    for (size_t i=0;i<entries;i++)
-    {
-        reg.textures.push_back(paths[i]);
-    }
-    
-    putki::builder::add_post_build_object(info->builder, inki::data_container_streaming_info::th(), &reg, "streaming-info");
-    
-    
-    putki::build::commit_package(pkg, info->pconf, "streaming.pkg");
+	for (size_t i = 0; i < entries; i++)
+	{
+		putki::builder::add_build_root(info->builder, paths[i], 1);
+	}
+
+	putki::package::data *pkg = putki::build::create_package(info->pconf);
+	putki::package::add(pkg, "streaming-info", false, true);
+
+	for (size_t i = 0; i < entries; i++)
+	{
+		putki::package::add(pkg, paths[i], false, true);
+	}
+
+	reg.textures.reserve(entries);
+	for (size_t i = 0; i < entries; i++)
+	{
+		reg.textures.push_back(paths[i]);
+	}
+
+	putki::builder::add_post_build_object(info->builder, inki::data_container_streaming_info::th(), &reg, "streaming-info");
+	putki::build::commit_package(pkg, info->pconf, "streaming.pkg");
 }
 
 void kosmos_register_postbuild()
 {
-    putki::build::add_postbuild_fn(kosmos_streamer_postbuild);
+	putki::build::add_postbuild_fn(kosmos_streamer_postbuild);
 }

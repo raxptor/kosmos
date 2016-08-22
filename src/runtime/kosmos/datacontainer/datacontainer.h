@@ -10,12 +10,15 @@ namespace kosmos
 	{
 		struct loaded_data
 		{
-			unsigned char *data;
+			const char *data;
 			size_t size;
 		};
 
 		loaded_data* load(outki::data_container *container, bool block_until_loaded);
 		void release(loaded_data *d);
+
+		void init();
+		void destroy();
 	}
 }
 
