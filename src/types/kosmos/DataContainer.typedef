@@ -16,8 +16,8 @@ DataContainerOutput [in, out] rtti non-instantiable
 }
 
 DataContainerStreamingResource : DataContainerOutput non-instantiable
-{
-	file ResourcePath	
+{	
+	string ResourcePath	
 }
 
 DataContainerStreamingInfo non-instantiable
@@ -33,6 +33,3 @@ DataContainer [in, out] rtti
 	[hidden] [no-out] string FileType
 	[hidden] ptr DataContainerStreamingResource Streaming
 }
-
-
-
