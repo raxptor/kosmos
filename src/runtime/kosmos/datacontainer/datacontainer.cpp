@@ -80,31 +80,32 @@ namespace kosmos
 			outki::data_container_streaming_resource *streaming = container->streaming;
 			KOSMOS_DEBUG("Loading data container with output " << streaming);
 
-			if (!streaming)
+			bool load_result;
+			if (streaming)
 			{
-				KOSMOS_DEBUG("Data was embedded");
-				nr->data = (const char*) container->bytes;
-				nr->size = (size_t) container->bytes_size;
-				s_loaded.insert(LoadMap::value_type(container, nr));
-				return nr;
+				KOSMOS_DEBUG("Attempting load from streaming package, path [" << container->streaming->streaming_file << "]");
+				load_result = putki::pkgmgr::load_resource(s_stream_pkg, container->streaming->streaming_file, &nr->resource);
 			}
 			else
 			{
-				if (!putki::pkgmgr::load_resource(s_stream_pkg, streaming->resource_path, &nr->resource))
-				{
-					KOSMOS_ERROR("Failed to load resource [" << streaming->resource_path << "]");
-					nr->data = 0;
-					nr->size = 0;
-				}
-				else
-				{
-					nr->data = nr->resource.data;
-					nr->size = nr->resource.size;
-					nr->is_loaded_resource = true;
-				}
-				s_loaded.insert(LoadMap::value_type(container, nr));
-				return nr;
-			}	
+				KOSMOS_DEBUG("Attempting load embedded resource with streaming as backup..")
+				load_result = putki::pkgmgr::load_resource(container->embedded_file, &nr->resource, s_stream_pkg);
+			}
+
+			if (!load_result)
+			{
+				KOSMOS_ERROR("Failed to load resource!");
+				nr->data = 0;
+				nr->size = 0;
+			}
+			else
+			{
+				nr->data = nr->resource.data;
+				nr->size = nr->resource.size;
+				nr->is_loaded_resource = true;
+			}
+			s_loaded.insert(LoadMap::value_type(container, nr));
+			return nr;
 		}
 
 		void release(loaded_data *d)

@@ -117,13 +117,13 @@ namespace
 			RECORD_INFO(info->record, "Uncropping to " << out_width << "x" << out_height)
 			outData = new unsigned int[out_width * out_height];
 
-			for (int y = 0; y < out_height; y++)
+			for (size_t y = 0; y < out_height; y++)
 			{
 				int srcy = y < pnginfo.height ? y : pnginfo.height - 1;
 				unsigned int *srcLine = pnginfo.pixels + pnginfo.width * srcy;
 				unsigned int *dstLine = outData + out_width * y;
 
-				for (int x = 0; x < pnginfo.width; x++)
+				for (size_t x = 0; x < pnginfo.width; x++)
 					*dstLine++ = *srcLine++;
 
 				// fill the rest with the last pixel
@@ -138,7 +138,7 @@ namespace
 			bytesOut.reserve(out_width * pnginfo.height * 4);
 
 			// RGBA
-			for (int i = 0; i < out_width * pnginfo.height; i++)
+			for (size_t i = 0; i < out_width * pnginfo.height; i++)
 			{
 				// RGBA
 				bytesOut.push_back((outData[i] >> 16) & 0xff);
@@ -181,7 +181,7 @@ namespace
 
 			// swap order in-place in the png buffer (naughty)
 			unsigned char *pngpixels = (unsigned char*)outData;
-			for (unsigned int i = 0; i < out_width*out_height; i++)
+			for (size_t i = 0; i < out_width*out_height; i++)
 			{
 				unsigned char t0 = pngpixels[0];
 				unsigned char t1 = pngpixels[1];
