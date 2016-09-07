@@ -1,17 +1,6 @@
 package kosmos;
 
-import putked.inki.Kosmos;
-import javafx.animation.AnimationTimer;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.paint.Color;
-import putked.DataHelper;
 import putked.Editor;
 import putked.DataObject;;
 

@@ -1,14 +1,9 @@
 package kosmos;
 
-import putked.inki.Kosmos;
-
 import java.io.*;
 
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import putked.DataHelper;
-import putked.DataImporter;
-import putked.DataObject;
 
 public class TextureImporter implements putked.DataImporter
 {

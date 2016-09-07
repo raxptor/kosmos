@@ -2,11 +2,11 @@
 
 AtlasEntry non-instantiable
 {
-	string id
-	float u0
-	float v0
-	float u1
-	float v1
+	string Id
+	float U0
+	float V0
+	float U1
+	float V1
 }
 
 AtlasOutput non-instantiable
